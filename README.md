@@ -5,6 +5,8 @@ The **vclust** program implements a 3-step approach to facilitate the use of uns
 
 ## Installation
 
+You can install **vclust** from github by using **devtools** library
+
 ```
 install.packages("devtools")
 devtools::install_github("zetan-li/vclust")
