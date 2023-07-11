@@ -5,3 +5,7 @@ The **vclust** program implements a 3-step approach to facilitate the use of uns
 
 ## Installation
 
+```
+install.packages("devtools")
+devtools::install_github("zetan-li/vclust")
+```
