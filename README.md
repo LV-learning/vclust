@@ -11,3 +11,7 @@ You can install **vclust** from github by using **devtools** library
 install.packages("devtools")
 devtools::install_github("zetan-li/vclust")
 ```
+
+## References
+
+Jo, B., Hastie, T. J., Li, Z., Youngstrom, E. A., Findling, R. L., & Horwitz, S. M. (2023). Reorienting Latent Variable Modeling for Supervised Learning. Multivariate Behavioral Research, 1-15.
