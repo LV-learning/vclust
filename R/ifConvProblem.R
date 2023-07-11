@@ -1,0 +1,15 @@
+ifConvProblem <- function(str_vec){
+  any(grepl("NO CONVERGENCE. NUMBER OF ITERATIONS EXCEEDED.",str_vec))
+  any(grepl("THE MODEL ESTIMATION DID NOT TERMINATE NORMALLY",str_vec))
+  any(grepl("THE STANDARD ERRORS OF THE MODEL PARAMETER ESTIMATES MAY NOT BE",str_vec)) &
+    any(grepl("TRUSTWORTHY FOR SOME PARAMETERS DUE TO A NON-POSITIVE DEFINITE",str_vec)) &
+    any(grepl("FIRST-ORDER DERIVATIVE PRODUCT MATRIX",str_vec))
+
+
+  return(any(grepl("NO CONVERGENCE. NUMBER OF ITERATIONS EXCEEDED.",str_vec))|
+           any(grepl("THE MODEL ESTIMATION DID NOT TERMINATE NORMALLY",str_vec))|
+           (any(grepl("THE STANDARD ERRORS OF THE MODEL PARAMETER ESTIMATES MAY NOT BE",str_vec)) &
+              any(grepl("TRUSTWORTHY FOR SOME PARAMETERS DUE TO A NON-POSITIVE DEFINITE",str_vec)) &
+              any(grepl("FIRST-ORDER DERIVATIVE PRODUCT MATRIX",str_vec)))
+  )
+}
