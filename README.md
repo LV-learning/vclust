@@ -7,6 +7,8 @@ In step 1, it conducts unsupervised clustering based on multivariate outcomes us
 ## Installation
 
 ```
+install.packages("devtools")
+devtools::install_github("LV-learning/vclust")
 
 ```
 
