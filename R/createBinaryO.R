@@ -23,7 +23,7 @@ createBinaryO <- function(y_names,
   }))
   O_max_min_mean <- tolower(trimws(O_max_min_mean))
   if(length(O_threshold) == 1){
-    input_dt[,"O"] <- apply(input_dt[,y_names],
+    input_dt[,"O"] <- apply(input_dt[,y_names,drop=FALSE],
                             1,
                             FUN=function(x)ifelse(sjmisc::is_empty(x),
                                                   NA,
