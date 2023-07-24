@@ -6,4 +6,10 @@ In step 1, it conducts unsupervised clustering based on multivariate outcomes us
 
 ## Installation
 
+```
+
+```
+
 ## Reference
+
+Jo, B., Hastie, T. J., Li, Z., Youngstrom, E. A., Findling, R. L., & Horwitz, S. M. (2023). Reorienting Latent Variable Modeling for Supervised Learning. Multivariate Behavioral Research, 1-15.
