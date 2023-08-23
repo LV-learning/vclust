@@ -23,7 +23,9 @@ install.packages("devtools")
 devtools::install_github("LV-learning/vclust")
 ```
 
-## [Manual](https://lvlearning.sites.stanford.edu/sites/g/files/sbiybj20736/files/media/file/vclust_1.0.pdf)
+## Documents  
+
+[Manual](https://lvlearning.sites.stanford.edu/sites/g/files/sbiybj20736/files/media/file/vclust_1.0.pdf)
 
 ## Reference
 
