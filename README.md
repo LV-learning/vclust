@@ -6,6 +6,8 @@ In step 1, it conducts unsupervised clustering based on multivariate outcomes us
 
 ## Installation
 
+Make sure your R/Rstudio environment is the one you are using and has all the packages.
+
 **Install `rhdf5` Package before `vclust`**
 
 Run these codes to install `rhdf5` or refer [rhdf5](https://bioconductor.org/packages/release/bioc/html/rhdf5.html) from Bioconductor
@@ -16,7 +18,7 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("rhdf5")
 ```
 
-**Install From Github**
+**Install `vclust` From Github**
 
 ```
 install.packages("devtools")
