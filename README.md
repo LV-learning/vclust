@@ -6,12 +6,23 @@ In step 1, it conducts unsupervised clustering based on multivariate outcomes us
 
 ## Installation
 
+**You Might Need to Install `rhdf5` Package before vclust**
+
+Run these code to install `rhdf5` or refer [rhdf5](https://bioconductor.org/packages/release/bioc/html/rhdf5.html) from `Bioconductor`
+
+```
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("rhdf5")
+```
+
 **Install From Github**
 
 ```
 install.packages("devtools")
 devtools::install_github("LV-learning/vclust")
 ```
+
 
 ## Reference
 
