@@ -24,6 +24,8 @@ runAndCheckConvMclust <- function(class_range,
     print(summary_mod)
     final_result <- as.data.frame(cbind(mod$z,mod$classification))
     output_dir <- paste(output_path_prefix,
+                        modelNames,
+                        "_",
                         "cP",
                         n_classes,
                         "/",
@@ -34,6 +36,8 @@ runAndCheckConvMclust <- function(class_range,
     aic <- 2*mod$df - 2*mod$loglik
     ##save prob
     output_dir_prob <- paste(output_dir,
+                             modelNames,
+                             "_",
                              "cP",
                              n_classes,
                              ".pp",
