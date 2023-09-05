@@ -44,7 +44,17 @@ validator <- function(validator_cutpoint = NULL,
         validator_type = "direct"
       }
     }
+  }else{
+    if(tolower(trimws(validator_type)) == "binary"){
+      validator_type = "direct"
+    }else if(tolower(trimws(validator_type)) == "cutpoint"){
+      validator_type = "to01"
+    }else if(tolower(trimws(validator_type)) == "combination"){
+      validator_type = "direct"
+    }
   }
+
+
 
   ##if thresholds length is 1 and validator_variables length > 1
   ## replicate thresholds to length(validator_variables) thresholds

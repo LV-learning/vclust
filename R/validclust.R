@@ -215,6 +215,7 @@ validclust <- function(sync_genclust,
   }
 
   if(isTRUE(sync_genclust)){
+    class_range <- max(global_parameters$class_range[1],class_range[1]):min(global_parameters$class_range[length(global_parameters$class_range)],class_range[length(class_range)])
     #folder_path = '/Users/zetanli/Desktop/myproject roc max predicted_cluster /testdiffseed_gmm_runif_validclust/gmm/cP3/',
     folder_path <- global_parameters$folder_path
     listwise_deletion_variables <- global_parameters$listwise_deletion_variables
@@ -352,7 +353,7 @@ validclust <- function(sync_genclust,
       res
 
 
-    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering")){
+    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering")){
 
       res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
                                                  ##model classes

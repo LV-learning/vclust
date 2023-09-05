@@ -95,7 +95,7 @@
 #' If \code{covariates = NA}, GMM runs without covariates.
 #' @param GMM_random_intercept A Boolean variable indicates whether GMM is
 #' conducted allowing for a random intercept. If \code{GMM_random_intercept = TRUE},
-#' GMM is conducted with and without allowing for a random intercept.
+#' GMM is conducted with allowing for a random intercept.
 #' If \code{GMM_random_intercept = FALSE}, GMM is conducted without allowing for a random intercept.
 #' @param GMM_trend For modeling of longitudinal trends, we use polynomial growth.
 #' Our program can support linear, quadratic, and cubic growth.
@@ -240,9 +240,10 @@ genclust <- function(model_type,
                                  useObs = useObs
     )
     global_parameters$folder_path <<- stop_at_n[[2]]
+    global_parameters$class_range <<- class_range[1]:stop_at_n[[1]]
     aicbic_res <- getAICBICforAll(
       folder_path = stop_at_n[[2]],
-      n_range = class_range,
+      n_range = class_range[1]:stop_at_n[[1]],
       output_path_prefix = output_path_prefix
     )
     names(aicbic_res) <- c("AIC","BIC","Sample_Size_Adjusted_BIC","n_classes")
@@ -265,7 +266,7 @@ genclust <- function(model_type,
     return(
       stop_at_n
     )
-  } else if (tolower(model_type) %in% c("gaussian mixture model", "mclust")) {
+  } else if (tolower(model_type) %in% c("gaussian mixture model", "mclust","mbc")) {
     ##Create dir
     if(dir.exists(output_path_prefix ) == FALSE){
       dir.create(output_path_prefix)
@@ -317,9 +318,10 @@ genclust <- function(model_type,
                                        modelNames = MBCtype
     )
     global_parameters$folder_path <<- stop_at_n[[2]]
+    global_parameters$class_range <<- class_range[1]:stop_at_n[[1]]
     aicbic_res <- getAICBICforAllMclust(
       folder_path = stop_at_n[[2]],
-      n_range = class_range,
+      n_range = class_range[1]:stop_at_n[[1]],
       output_path_prefix = output_path_prefix
     )
     names(aicbic_res) <- c("AIC","BIC","modelName","n_classes")
@@ -398,9 +400,10 @@ genclust <- function(model_type,
                                        seed_num = seed_num
     )
     global_parameters$folder_path <<- stop_at_n[[2]]
+    global_parameters$class_range <<- class_range[1]:stop_at_n[[1]]
     aicbic_res <- getAICBICforAllKmeans(
       folder_path = stop_at_n[[2]],
-      n_range = class_range,
+      n_range = class_range[1]:stop_at_n[[1]],
       output_path_prefix = output_path_prefix
     )
     gap_stats <- read.csv(
@@ -494,6 +497,7 @@ genclust <- function(model_type,
       O_max_min_mean = Ogroups_cutpoint_max_min_mean
     )
     global_parameters$folder_path <<- stop_at_n[[2]]
+    global_parameters$class_range <<- class_range[1]:stop_at_n[[1]]
     return(stop_at_n)
   }
 }
