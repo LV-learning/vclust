@@ -12,7 +12,7 @@ createTargetDichVars.validator_to01 <- function(validator,
   if(length(validator$thresholds) == 1){
     a_threshold <- validator$thresholds[1]
     a_sign <- validator$signs[1]
-    dt <- data.frame(variable_start_to_end = apply(dt[,validator$validator_variables],
+    dt <- data.frame(variable_start_to_end = apply(dt[,validator$validator_variables,drop=FALSE],
                                                    1,
                                                    FUN=function(x)ifelse(sjmisc::is_empty(x),
                                                                          NA,
