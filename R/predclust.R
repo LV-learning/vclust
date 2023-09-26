@@ -399,7 +399,7 @@ predclust <- function(sync_genclust,
                                        pcd_dropping_pct,
                                        if_CV,
                                        label_category1 = label_category1)
-      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering")){
+      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
 
         res <- dichPseudoByPathAllModelMclust(folder_path,
                                                    ##model classes
@@ -450,7 +450,7 @@ predclust <- function(sync_genclust,
                                              pcd_dropping_pct,
                                              if_CV,
                                              label_category1 = label_category1)
-      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering")){
+      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
 
         res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
                                                    ##model classes
