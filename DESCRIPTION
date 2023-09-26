@@ -25,7 +25,7 @@ Imports:
     stats,
     stringr,
     utils
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Author:
 	Booil Jo <booil@stanford.edu> [aut, cre]
 	Zetan Li <zetanli@stanford.edu> [aut]
