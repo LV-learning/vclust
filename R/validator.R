@@ -66,8 +66,9 @@ validator <- function(validator_cutpoint = NULL,
   }
   if(!is.null(predicted_cluster_combination)){
     predicted_cluster_combination <- strsplit(predicted_cluster_combination," |,")[[1]]
-    predicted_cluster_combination <- paste(paste("P",1:length(predicted_cluster_combination),sep = ""),collapse="")
-    m <- length(unlist(strsplit(predicted_cluster_combination,"P"))[unlist(strsplit(predicted_cluster_combination,"P"))!=""])
+    m <- length(predicted_cluster_combination)
+    predicted_cluster_combination <- paste(paste("P",which(predicted_cluster_n %in% predicted_cluster_combination),sep = ""),collapse="")
+    print(predicted_cluster_combination)
     predicted_cluster_combination <- paste("C",
                                            m,
                                            "No",
@@ -75,6 +76,7 @@ validator <- function(validator_cutpoint = NULL,
                                            "comb",
                                            predicted_cluster_combination,
                                            sep='')
+    predicted_cluster_n <- length(predicted_cluster_n)
   }
 
   # GT, LT, GE, LE, EQ,

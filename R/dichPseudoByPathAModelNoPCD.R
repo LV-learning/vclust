@@ -27,8 +27,8 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
   comb_dt[comb_dt > 1] <- 1
   if(!is.null(label_category1)){
     label_category1 <- strsplit(label_category1," |,")[[1]]
-    label_category1 <- paste(paste("P",1:length(label_category1),sep = ""),collapse="")
-    m <- length(unlist(strsplit(label_category1,"P"))[unlist(strsplit(label_category1,"P"))!=""])
+    m <- length(label_category1)
+    label_category1 <- paste(paste("P",which(names(pp_dt)[1:(ncol(pp_dt)-1)] %in% label_category1),sep = ""),collapse="")
     label_category1 <- paste("C",
                              m,
                              "No",
