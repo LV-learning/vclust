@@ -28,8 +28,10 @@ which is useful when using clustering models or methods that are not currently
 covered in genclust. In this case, the user is required to provide the
 details about the data and clustering results.}
 
-\item{info_genclust}{This argument will be applied when if \code{sync_genclust = FALSE}
-and ignored if \code{sync_genclust = TRUE}. There are a few subcomponents described below.
+\item{info_genclust}{This argument will be applied when \code{sync_genclust = FALSE}
+and ignored when \code{sync_genclust = TRUE}. users can use the format
+\code{info_genclust = list(subcomponents)}
+There are a few subcomponents described below.
 
 \itemize{
 \item{\code{data_path:}}{ When \code{sync_genclust = FALSE}, the user needs to specify the folder
@@ -42,12 +44,14 @@ The path should be absolute path (full path) when using Windows operation system
 \item{\code{variable_names:}}{ When \code{sync_genclust = FALSE},
 the user needs to specify variable names.
 A string vector indicates names of variables in the data specified in data_path.
-For example,
+For example, \cr
 \code{variable_names = c("e1","e2","e3","f1","f2","z1","q1","w1","w2","w3")}.
 These variable names will overwrite the original names when the data file
 already has variables names (i.e., header).
 The user can choose to use those original names
 by specifying \code{variable_names = NULL}.}
+\item{\code{naString:}}{A string indicates what string is interpreted as NA value
+in the input data.}
 \item{\code{cluster_names: }}{ When \code{sync_genclust = FALSE},
 the user needs to specify the names of clusters.
 A string vector indicates names of variables from data_path.
@@ -117,18 +121,20 @@ The subcomponents include the following:
 
 \itemize{
 \item{\code{listwise_deletion_variables: }}{ A vector indicates variables to be used to conduct
-listwise deletion. For example, \code{listwise_deletion_variables = c("a1","b1")}.
+listwise deletion.\cr
+For example,
+\code{listwise_deletion_variables = c("a1","b1")}.
 The user is allowed to use listwise deletion with variables that are not being used in the validclust procedure.
 The user is also allowed to use different variables for listwise deletion for different validators.
-Note that the rest of subcomponent arguments will no longer apply to the deleted cases.
+Note that the rest of subcomponent arguments will no longer apply to the deleted cases.\cr
 If \code{sync_genclust = TRUE} and listwise_deletion_variables has been already used in the genclust step,
 this argument can be used to specify additional deletion.}
 \item{\code{validator_source_variables: }}{ A list of variables to be used to
-construct a validator.
+construct a validator.\cr
 \code{For example, validator_source_variables = c("a1","a2","a3","a4")}.}
 \item{\code{validator_source_all_missing:}}{ An integer specifies which value
 to take when all variables listed in validator_source_variables are missing.
-The three possible options are NA, 1, or 0.
+The three possible options are NA, 1, or 0.\cr
 If \code{validator_source_all_missing = NA},
 the validator of these individuals or units will be treated as missing.
 The default is 0.}
@@ -143,27 +149,27 @@ There are 3 allowed types:
 variables (continuous and/or binary) are used together as a set of predictors of cluster membership.
 }
 \item{\code{validator_cutpoint:}}{ A numeric value/vector specifies a
-threshold or multiple thresholds to create a binary validator.
+threshold or multiple thresholds to create a binary validator.\cr
 For example, \code{validator_cutpoint = 12}, or \code{validator_cutpoint = c(12, 13, 14)}.}
 \item{\code{validator_cutpoint_sign:}}{ A character value/vector specifies comparison operator(s)
 to be used with thresholds. Available options include >=, <=, >, <, ==, GE, LE, GT, LT, and EQ.
 When using a vector of multiple thresholds, the signs will be applied to each cutpoint.}
 \item{\code{validator_cutpoint_max_min_mean:}}{A string specifies a function to use to
-summarize multiple variables into a single validator. The options include max, min, and mean.
+summarize multiple variables into a single validator. The options include max, min, and mean.\cr
 For example, \code{max_min_mean = "max"}.
 
 When validator_cutpoint is a single value,
-all cutpoint related arguments can be used together.
-For example, if \code{validator_source_variables = c('a', 'b', 'c')},
-\code{validator_cutpoint  = 12}, \code{validator_cutpoint_sign =">="}, and
-\code{validator_cutpoint_max_min_mean="max"}, all cases with max(a, b, c) >= 12
+all cutpoint related arguments can be used together.\cr
+For example, if \code{validator_source_variables = c('a', 'b', 'c')},\cr
+\code{validator_cutpoint  = 12}, \code{validator_cutpoint_sign =">="},\cr
+and \code{validator_cutpoint_max_min_mean="max"}, all cases with max(a, b, c) >= 12
 will be assigned the value of 1, and the rest the value of 0.
 
 When validator_cutpoint has multiple values,
-validator_max_min_mean will be ignored.
-For example, when \code{validator_source_variables = c('a','b','c')},
-\code{validator_cutpoint = c(12, 13, 14)},
-\code{validator_cutpoint_sign = c('>=','<','>')},
+validator_max_min_mean will be ignored.\cr
+For example, when \code{validator_source_variables = c('a','b','c')},\cr
+\code{validator_cutpoint = c(12, 13, 14)},\cr
+\code{validator_cutpoint_sign = c('>=','<','>')},\cr
 all cases with a>=12 and b<13 and c>14 will be assigned the value of 1,
 and the rest the value of 0.
 }

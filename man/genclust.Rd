@@ -10,13 +10,13 @@ genclust(
   min_units = 10,
   data_path,
   variable_names,
+  naString = NULL,
   y_names,
   output_path_prefix = "output/",
   useobs,
   listwise_deletion_variables,
   clustering_data_fraction = 1,
-  seed_num = c(seed_num_unsupervised_model = 4561234, seed_num_impute_missing =
-    4561234),
+  seed_num = c(seed_num_unsupervised_model = 4561234, seed_num_impute_missing = 4561234),
   kmeans_gap_stats_B = 50,
   kmeans_iter = 25,
   MBCtype,
@@ -28,7 +28,9 @@ genclust(
   GMM_random_intercept,
   GMM_trend = "quadratic",
   GMM_initial_starts = 500,
-  GMM_final_optimizations = 50
+  GMM_final_optimizations = 50,
+  GMM_ID = NULL,
+  GMM_AUXILIARY = NULL
 )
 }
 \arguments{
@@ -46,7 +48,8 @@ For K-means, R function kmeans is used.
 For example, \code{model_type="MBC"}, \code{model_type="GMM"}, \code{model_type="Kmeans"}, or \code{model_type="Ogroups"}.}
 
 \item{class_range}{An integer vector specifies the desired number of clusters.
-For example, \code{class_range = 2:4} means clustering with 2, 3, and 4 clusters.}
+For example, \cr
+\code{class_range = 2:4} means clustering with 2, 3, and 4 clusters.}
 
 \item{min_units}{An integer indicates the minimum number of units in each cluster.
 If the number is less than the minimum, unsupervised clustering will stop.
@@ -61,10 +64,14 @@ or "D:/folder/inputdata.csv" for Windows user.}
 \item{variable_names}{A text string indicates names of variables from data_path,
 where names are separated by white spaces, or commas. For example,
 when input data has 9 columns, a1, a2, a3, a4, b1, b2, b3, cov1, and cov2,
-\code{variable_names = "a1, a2, a3, a4, b1, b2, b3, cov1, cov2"}.
+\code{variable_names = "a1, a2, a3, a4, b1, b2, b3, cov1, cov2"} or \cr
+\code{variable_names = "a1 a2 a3 a4 b1 b2 b3 cov1 cov2"}.
 These variable names will overwrite the original names when the data
 file already has variables names (i.e., header). The user can choose
 to use those original names by specifying \code{variable_names = NULL}.}
+
+\item{naString}{A string indicates what string is interpreted as NA value
+in the input data.}
 
 \item{y_names}{A string vector specifies the variable names used as
 multivariate outcomes in unsupervised clustering.
@@ -120,13 +127,14 @@ function is used to construct subgroups. Available options are max, min, and mea
 
 When \code{model_type = Ogroups} and Ogroups_cutpoint is a single value,
 above three arguments are used to define subgroups.
-For example, if \code{y_names = c('a', 'b', 'c'),  Ogroup_cutpoint = 12, Ogroups_cutpoint_sign=">=", and cutpoint_max_min_mean="max"},
-all cases with \deqn{max(a, b, c) >= 12} will be assigned the value of 1, and the rest the value of 0.
+For example,\cr
+if \code{y_names = c('a', 'b', 'c')}, \code{Ogroup_cutpoint = 12}, \code{Ogroups_cutpoint_sign=">="},\cr
+and \code{cutpoint_max_min_mean="max"}, all cases with \deqn{max(a, b, c) >= 12} will be assigned the value of 1, and the rest the value of 0.
 
 When model_type = Ogroups and Ogroups_cutpoint is a vector with multiple thresholds,
 Ogroups_cutpoint_max_min_mean will be ignored.
-For example, if \code{y_names = c('a', 'b', 'c'),  Ogroup_cutpoint = c(12, 13, 14),
-and Ogroups_cutpoint_sign = c('>=', '<', '>')},
+For example, if \code{y_names = c('a', 'b', 'c')},  \code{Ogroup_cutpoint = c(12, 13, 14)},\cr
+and \code{Ogroups_cutpoint_sign = c('>=', '<', '>')},
 all cases with \deqn{a>=12 and b<13 and c>14} will be assigned the value of 1,
 and the rest the value of 0.
 Formation of observed groups using more complex manipulations should be
@@ -140,13 +148,13 @@ may mean that a1 is measured at baseline, a2 at 1 year, and a3 at 2 years from t
 \item{GMM_covariates}{A string contains covariates used in clustering.
 Currently, this option applies only to GMM.
 For example, if \code{covariates="cov1 cov2 cov3"},
-GMM runs with and without using these covariates as predictors of
+GMM runs with using these covariates as predictors of
 growth parameters (intercept and slope) and the cluster membership.
 If \code{covariates = NA}, GMM runs without covariates.}
 
 \item{GMM_random_intercept}{A Boolean variable indicates whether GMM is
 conducted allowing for a random intercept. If \code{GMM_random_intercept = TRUE},
-GMM is conducted with and without allowing for a random intercept.
+GMM is conducted with allowing for a random intercept.
 If \code{GMM_random_intercept = FALSE}, GMM is conducted without allowing for a random intercept.}
 
 \item{GMM_trend}{For modeling of longitudinal trends, we use polynomial growth.
@@ -158,6 +166,12 @@ values in maximum likelihood optimization of GMM.}
 
 \item{GMM_final_optimizations}{An integer indicates the number of final stage
 optimizations in maximum likelihood optimization of GMM.}
+
+\item{GMM_ID}{A string specifies the variable name of ID in the input file.
+This ID variable will be included in the final .pp file.}
+
+\item{GMM_AUXILIARY}{A string vector specifies several additional variables
+which are intended to included in the final .pp file for subsequent analyses.}
 }
 \value{
 Clustering results are saved in the folder specified in output_path_prefix.

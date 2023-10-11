@@ -10,6 +10,7 @@ predclust(
   output_path_prefix,
   data_path,
   variable_names,
+  naString,
   predictors_names,
   cluster_names,
   label_category1,
@@ -61,14 +62,19 @@ The information provided here will supersede the information from genclust and v
 
 \item{variable_names}{When data_path is used, the user needs to
 specify variable names.
-For example, \code{variable_names = c(“x”, “e1”, “e2”, “e3”, “f1”, “f2”, “z1”, “q1”, “w1”, “w2”, “w3”, “u1”, “u2”)}.
+For example, \cr
+\code{variable_names = }\cr
+\code{c('x', 'e1', 'e2', 'e3', 'f1', 'f2', 'z1', 'q1', 'w1', 'w2', 'w3', 'u1', 'u2')}.
 These variable names will overwrite the original names when the data file already has variables names (i.e., header).
 The user can choose to use those original names by specifying \code{variable_names = NULL}.}
+
+\item{naString}{A string indicates what string is interpreted as NA value
+in the input data.}
 
 \item{predictors_names}{A string vector indicates names of variables to be used as predictors (input variables).
 For example, \code{predictors_names = c("x","w1","w2","w3","u1","u2")}.}
 
-\item{cluster_names}{When data_path is not used, \code{sync_genclust = TRUE},
+\item{cluster_names}{When data_path is not used, \code{sync_genclust = TRUE},\cr
 and \code{sync_validclust = FALSE},
 the user is expected to use the cluster names from the
 summary of the genclust procedure provided in genclust_results.csv.
@@ -96,10 +102,11 @@ of P1+P3 of belonging to the first category and the probability of P2+P4+P5
 of belonging to the second category of the label.}
 
 \item{cluster_label_position}{A string indicates the location of the
-cluster label in prediction. When \code{cluster_label_position="predictor"},
-the cluster label defined in label_category1 will be used as a predictor.
+cluster label in prediction. \cr
+When \code{cluster_label_position="predictor"},
+the cluster label defined in label_category1 will be used as a predictor.\cr
 When \code{cluster_label_position="predicted"}, the cluster label
-will be used as an outcome predicted by provided predictors (input variables).
+will be used as an outcome predicted by provided predictors (input variables).\cr
 If \code{cluster_label_position="none"}, the cluster label will be omitted in supervised learning.}
 
 \item{outcome_obs}{When \code{cluster_label_position = "predictor"}
@@ -140,13 +147,14 @@ For example, \code{outcome_cutpoint_max_min_mean="max"}.
 
 When outcome_cutpoint is a single value, all cutpoint related arguments
 can be used together. For example, if \code{outcome_source_variables=c("a","b","c")},
-\code{outcome_cutpoint  = 12}, \code{outcome_cutpoint_sign =">="},
+\code{outcome_cutpoint  = 12}, \code{outcome_cutpoint_sign =">="},\cr
 and \code{outcome_cutpoint_max_min_mean="max"}, all cases with \deqn{max(a, b, c) >= 12}
 will be assigned the value of 1, and the rest the value of 0.
 
 When outcome_cutpoint has multiple values, outcome_max_min_mean will be ignored.
 For example, when \code{outcome_source_variables=c("a","b","c")},
-\code{outcome_cutpoint = c(12, 13, 14)}, \code{outcome_cutpoint_sign = c(">=", "<", ">")},
+\code{outcome_cutpoint = c(12, 13, 14)}, \cr
+\code{outcome_cutpoint_sign = c(">=", "<", ">")},
 all cases with \deqn{a>=12 and b<13 and c>14} will be assigned the value of 1,
 and the rest the value of 0.}
 
