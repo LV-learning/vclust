@@ -10,7 +10,8 @@ createGMMInput <- function(n_classes,
                            x_names,
                            useObs,
                            y_names,
-                           time_scores){
+                           time_scores,
+                           auxiliary){
   title <- 'TITLE:pgb only model '
   y_use <- paste(y_names,collapse = " \n             ")
   useV <- paste('     USEV  = ',y_use, sep = '')
@@ -165,7 +166,17 @@ Series = '
 
   output_path <- paste(output_path_prefix ,outputName,sep='')
   outfile <- file(output_path,"w")
-  writeLines(c(title,dataSdata,varDefine,useV,classp,Missing,useObs,analysis,modelTop,modelRandom,
+
+  if(!is.null(auxiliary)){
+    auxiliary <- paste(auxiliary,collapse = " \n             ")
+    auxiliary <- paste('     AUXILIARY  = ',auxiliary, sep = '')
+    auxiliary <- paste(auxiliary,';', sep = '')
+    print("auxiliary is:")
+    print(auxiliary)
+  }
+
+
+  writeLines(c(title,dataSdata,varDefine,useV,auxiliary,classp,Missing,useObs,analysis,modelTop,modelRandom,
                modelXVariates_part1,modelXVariates_part2,modelBottom,output,plotall),outfile)
   close(outfile)
   return(list(output_path_prefix,outputName_noSuffix))

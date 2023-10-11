@@ -54,22 +54,24 @@ getAICBICforAll <- function(folder_path,
   print(folder_path)
   final_aicbic_results <- data.frame()
   for(cur_class in n_range){
-    cur_folder_path <- paste(folder_path,
-                             as.character(cur_class),
-                             '/',sep = "")
-    print(cur_folder_path)
-    ###Here should be a function
-    aicbic <- getAICBICAModel(cur_folder_path = cur_folder_path
-    )
-    ###return aic bic as a vector
+    aicbic <- c(NA,NA,NA,cur_class)
+    base::suppressWarnings(try({
+      cur_folder_path <- paste(folder_path,
+                               as.character(cur_class),
+                               '/',sep = "")
+      print(cur_folder_path)
+      ###Here should be a function
+      aicbic <- getAICBICAModel(cur_folder_path = cur_folder_path)
+      ###return aic bic as a vector
 
-    aicbic <- c(aicbic,cur_class)
-
+      aicbic <- c(aicbic,cur_class)
+    },
+    silent = TRUE))
     final_aicbic_results <- rbind(final_aicbic_results,aicbic)
   }
   names(final_aicbic_results) <- c("Akaike (AIC)","Bayesian (BIC)","Sample-Size Adjusted BIC","n_classes")
 
-  write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
+  #write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
   return(final_aicbic_results)
 }
 
@@ -99,19 +101,25 @@ getAICBICforAllMclust <- function(folder_path,
 
   final_aicbic_results <- data.frame()
   for(cur_class in n_range){
-    cur_folder_path <- paste(folder_path,
-                             as.character(cur_class),
-                             '/',sep = "")
-    ###Here should be a function
-    aicbic <- read.csv(paste(cur_folder_path,'aicbic.csv',sep=''))
-    aicbic <- c(aicbic$aic,aicbic$bic,aicbic$modelName)
-    ###return aic bic as a vector
-    aicbic <- c(aicbic,cur_class)
+    aicbic <- c(NA,NA,NA,cur_class)
+    #base::suppressWarnings()
+    base::suppressWarnings(try({
+      cur_folder_path <- paste(folder_path,
+                               as.character(cur_class),
+                               '/',sep = "")
+      ###Here should be a function
+      aicbic <- utils::read.csv(paste(cur_folder_path,'aicbic.csv',sep=''))
+      unlink(paste(cur_folder_path,'aicbic.csv',sep=''))
+      aicbic <- c(aicbic$aic,aicbic$bic,aicbic$modelName)
+      ###return aic bic as a vector
+      aicbic <- c(aicbic,cur_class)
+    },
+    silent = TRUE))
     final_aicbic_results <- rbind(final_aicbic_results,aicbic)
   }
   names(final_aicbic_results) <- c("Akaike (AIC)","Bayesian (BIC)","modelName","n_classes")
 
-  write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
+  #write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
   return(final_aicbic_results)
 }
 
@@ -124,19 +132,24 @@ getAICBICforAllKmeans <- function(folder_path,
 
   final_aicbic_results <- data.frame()
   for(cur_class in n_range){
-    cur_folder_path <- paste(folder_path,
-                             as.character(cur_class),
-                             '/',sep = "")
-    ###Here should be a function
-    aicbic <- read.csv(paste(cur_folder_path,'model_metrics.csv',sep=''))
-    aicbic <- c(aicbic$withinss,aicbic$betweenss,aicbic$mean_silhouette)
-    ###return aic bic as a vector
-    aicbic <- c(aicbic,cur_class)
+    aicbic <- c(NA,NA,NA,cur_class)
+    base::suppressWarnings(try({
+      cur_folder_path <- paste(folder_path,
+                               as.character(cur_class),
+                               '/',sep = "")
+      ###Here should be a function
+      aicbic <- utils::read.csv(paste(cur_folder_path,'model_metrics.csv',sep=''))
+      unlink(paste(cur_folder_path,'model_metrics.csv',sep=''))
+      aicbic <- c(aicbic$withinss,aicbic$betweenss,aicbic$mean_silhouette)
+      ###return aic bic as a vector
+      aicbic <- c(aicbic,cur_class)
+    },
+    silent=TRUE))
     final_aicbic_results <- rbind(final_aicbic_results,aicbic)
   }
   names(final_aicbic_results) <- c("withinss","betweenss","mean_silhouette","n_classes")
 
-  write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
+  #write.csv(final_aicbic_results,paste(output_path_prefix,"aicbic_results.csv",sep = ""))
   return(final_aicbic_results)
 }
 

@@ -59,8 +59,7 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
     dt_rnames <- dt_rnames_list[[v_id]]
     dt_rmna <- dt_rmna_list[[v_id]]
     if(!is.null(label_category1)){
-      label_category1 <- strsplit(label_category1," |,")[[1]]
-      label_category1 <- paste(paste("P",1:length(label_category1),sep = ""),collapse="")
+      label_category1 <- toupper(stringr::str_extract(gsub(" |,","",label_category1),'([pP][1234567890]+)+'))
       m <- length(unlist(strsplit(label_category1,"P"))[unlist(strsplit(label_category1,"P"))!=""])
       label_category1 <- paste("C",
                                m,

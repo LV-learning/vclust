@@ -1,4 +1,5 @@
 validate_validator <- function(x){
+  print(x)
   arguments <- unclass(x)
   print(arguments$flip_outcome_type)
   if(!sjmisc::is_empty(arguments$flip_outcome_type) && arguments$flip_outcome_type == 'binary'){

@@ -22,7 +22,8 @@ runGMMs <- function(n_classes,
                     output_path_prefix,
                     data_path,
                     x_names,
-                    useObs){
+                    useObs,
+                    auxiliary){
 
   output_path <- createGMMInput(n_classes = n_classes,
                                 is_random_i = is_random_i,
@@ -36,7 +37,8 @@ runGMMs <- function(n_classes,
                                 output_path_prefix = output_path_prefix,
                                 data_path = data_path,
                                 x_names = x_names,
-                                useObs = useObs)
+                                useObs = useObs,
+                                auxiliary = auxiliary)
   print("output_path is: ")
   print(output_path)
   MplusAutomation::runModels(output_path[[1]],showOutput = TRUE)

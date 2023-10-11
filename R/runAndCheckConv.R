@@ -11,7 +11,8 @@ runAndCheckConv <- function(class_range,
                             data_path,
                             threshold,
                             x_names,
-                            useObs ){
+                            useObs,
+                            auxiliary){
   output_dir_out <- ""
   for(n_classes in class_range){
     out_file <- runGMMs(n_classes = n_classes,
@@ -26,7 +27,8 @@ runAndCheckConv <- function(class_range,
                         output_path_prefix = output_path_prefix,
                         data_path = data_path,
                         x_names = x_names,
-                        useObs = useObs)
+                        useObs = useObs,
+                        auxiliary = auxiliary)
 
     class_counts <- classCountsStrToDf(getClassCountsStr(out_file[[2]]))
     if(n_classes < 10){

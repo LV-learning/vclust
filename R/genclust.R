@@ -13,7 +13,8 @@
 #'
 #' For example, \code{model_type="MBC"}, \code{model_type="GMM"}, \code{model_type="Kmeans"}, or \code{model_type="Ogroups"}.
 #' @param class_range An integer vector specifies the desired number of clusters.
-#' For example, \code{class_range = 2:4} means clustering with 2, 3, and 4 clusters.
+#' For example, \cr
+#' \code{class_range = 2:4} means clustering with 2, 3, and 4 clusters.
 #' @param min_units An integer indicates the minimum number of units in each cluster.
 #' If the number is less than the minimum, unsupervised clustering will stop.
 #' For example, when the unit of analysis is a person and \code{min_units=10},
@@ -25,10 +26,13 @@
 #' @param variable_names A text string indicates names of variables from data_path,
 #' where names are separated by white spaces, or commas. For example,
 #' when input data has 9 columns, a1, a2, a3, a4, b1, b2, b3, cov1, and cov2,
-#' \code{variable_names = "a1, a2, a3, a4, b1, b2, b3, cov1, cov2"}.
+#' \code{variable_names = "a1, a2, a3, a4, b1, b2, b3, cov1, cov2"} or \cr
+#' \code{variable_names = "a1 a2 a3 a4 b1 b2 b3 cov1 cov2"}.
 #' These variable names will overwrite the original names when the data
 #' file already has variables names (i.e., header). The user can choose
 #' to use those original names by specifying \code{variable_names = NULL}.
+#' @param naString A string indicates what string is interpreted as NA value
+#' in the input data.
 #' @param y_names A string vector specifies the variable names used as
 #' multivariate outcomes in unsupervised clustering.
 #' When these are repeated measures used with GMM, they
@@ -72,13 +76,14 @@
 #'
 #' When \code{model_type = Ogroups} and Ogroups_cutpoint is a single value,
 #' above three arguments are used to define subgroups.
-#' For example, if \code{y_names = c('a', 'b', 'c'),  Ogroup_cutpoint = 12, Ogroups_cutpoint_sign=">=", and cutpoint_max_min_mean="max"},
-#' all cases with \deqn{max(a, b, c) >= 12} will be assigned the value of 1, and the rest the value of 0.
+#' For example,\cr
+#' if \code{y_names = c('a', 'b', 'c')}, \code{Ogroup_cutpoint = 12}, \code{Ogroups_cutpoint_sign=">="},\cr
+#'  and \code{cutpoint_max_min_mean="max"}, all cases with \deqn{max(a, b, c) >= 12} will be assigned the value of 1, and the rest the value of 0.
 #'
 #' When model_type = Ogroups and Ogroups_cutpoint is a vector with multiple thresholds,
 #' Ogroups_cutpoint_max_min_mean will be ignored.
-#' For example, if \code{y_names = c('a', 'b', 'c'),  Ogroup_cutpoint = c(12, 13, 14),
-#' and Ogroups_cutpoint_sign = c('>=', '<', '>')},
+#' For example, if \code{y_names = c('a', 'b', 'c')},  \code{Ogroup_cutpoint = c(12, 13, 14)},\cr
+#' and \code{Ogroups_cutpoint_sign = c('>=', '<', '>')},
 #' all cases with \deqn{a>=12 and b<13 and c>14} will be assigned the value of 1,
 #' and the rest the value of 0.
 #' Formation of observed groups using more complex manipulations should be
@@ -90,7 +95,7 @@
 #' @param GMM_covariates A string contains covariates used in clustering.
 #' Currently, this option applies only to GMM.
 #' For example, if \code{covariates="cov1 cov2 cov3"},
-#' GMM runs with and without using these covariates as predictors of
+#' GMM runs with using these covariates as predictors of
 #' growth parameters (intercept and slope) and the cluster membership.
 #' If \code{covariates = NA}, GMM runs without covariates.
 #' @param GMM_random_intercept A Boolean variable indicates whether GMM is
@@ -104,6 +109,10 @@
 #' values in maximum likelihood optimization of GMM.
 #' @param GMM_final_optimizations An integer indicates the number of final stage
 #' optimizations in maximum likelihood optimization of GMM.
+#' @param GMM_ID A string specifies the variable name of ID in the input file.
+#' This ID variable will be included in the final .pp file.
+#' @param GMM_AUXILIARY A string vector specifies several additional variables
+#' which are intended to included in the final .pp file for subsequent analyses.
 #'
 #' @references Jo, B., Hastie, T. J., Li, Z., Youngstrom, E. A., Findling, R. L., & Horwitz, S. M. (2023). Reorienting Latent Variable Modeling for Supervised Learning. Multivariate Behavioral Research, 1-15.
 #' @return
@@ -117,6 +126,7 @@ genclust <- function(model_type,
                      min_units = 10,
                     data_path,
                     variable_names,
+                    naString = NULL,
                     y_names,
                     output_path_prefix = 'output/',
                     useobs,
@@ -135,12 +145,15 @@ genclust <- function(model_type,
                     GMM_random_intercept,
                     GMM_trend = "quadratic",
                     GMM_initial_starts = 500,
-                    GMM_final_optimizations = 50
+                    GMM_final_optimizations = 50,
+                    GMM_ID = NULL,
+                    GMM_AUXILIARY = NULL
                     ){
   assign("global_parameters", list(), envir = .GlobalEnv)
   global_parameters$listwise_deletion_variables <<- listwise_deletion_variables
   global_parameters$useobs <<- useobs
   global_parameters$variable_names <<- variable_names
+  global_parameters$naString <<- naString
   global_parameters$y_names <<- y_names
   global_parameters$model_type <<- model_type
   global_parameters$covariates <<- GMM_covariates
@@ -148,8 +161,9 @@ genclust <- function(model_type,
   global_parameters$GMM_trend <<- GMM_trend
   global_parameters$GMM_random_intercept <<- GMM_random_intercept
   print("start")
+  GMM_AUXILIARY <-c(GMM_ID,GMM_AUXILIARY)
   useObs <- useobs
-  try(RNGkind(sample.kind = "Rounding"), silent = TRUE)
+  base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if (dir.exists(output_path_prefix) == FALSE) {
     dir.create(output_path_prefix)
   }
@@ -209,7 +223,8 @@ genclust <- function(model_type,
       print(x_names1)
     }
     input_dt <- inputDataPrepare(data_path = data_path,
-                                 x_names = x_names1)
+                                 x_names = x_names1,
+                                 naString = naString)
     input_dt <- input_dt[stats::complete.cases(input_dt[,c(listwise_deletion_variables)]),]
     input_dt[is.na(input_dt)] <- 9999
     input_dt <- subset(input_dt,select = -original_id)
@@ -223,7 +238,8 @@ genclust <- function(model_type,
     global_parameters$data_path <<- data_path
     x_names <- paste(names(input_dt),collapse="\n")
     global_parameters$variable_names <<- x_names
-
+    print("GMM_AUXILIARY is:")
+    print(GMM_AUXILIARY)
     stop_at_n <- runAndCheckConv(class_range = class_range,
                                  is_random_i = GMM_random_intercept,
                                  is_covariates = !sjmisc::is_empty(GMM_covariates),
@@ -237,7 +253,8 @@ genclust <- function(model_type,
                                  data_path = data_path,
                                  threshold = min_units,
                                  x_names = x_names,
-                                 useObs = useObs
+                                 useObs = useObs,
+                                 auxiliary = GMM_AUXILIARY
     )
     global_parameters$folder_path <<- stop_at_n[[2]]
     global_parameters$class_range <<- class_range[1]:stop_at_n[[1]]
@@ -283,7 +300,8 @@ genclust <- function(model_type,
       print(x_names1)
     }
     input_dt <- inputDataPrepare(data_path = data_path,
-                                 x_names = x_names1)
+                                 x_names = x_names1,
+                                 naString = naString)
     #print(input_dt)
     # input_dt[input_dt == 9999] <- NA
     # input_dt[input_dt == "*"] <- NA
@@ -360,7 +378,8 @@ genclust <- function(model_type,
       print(x_names1)
     }
     input_dt <- inputDataPrepare(data_path = data_path,
-                                 x_names = x_names1)
+                                 x_names = x_names1,
+                                 naString = naString)
     #print(input_dt)
     # input_dt[input_dt == 9999] <- NA
     # input_dt[input_dt == "*"] <- NA
@@ -465,7 +484,8 @@ genclust <- function(model_type,
       print(x_names1)
     }
     input_dt <- inputDataPrepare(data_path = data_path,
-                                 x_names = x_names1)
+                                 x_names = x_names1,
+                                 naString = naString)
     #print(input_dt)
     # input_dt[input_dt == 9999] <- NA
     # input_dt[input_dt == "*"] <- NA

@@ -19,8 +19,11 @@ genLogisticMetrics <- function(cvFolds_dt,
   logistic_formula <- stats::as.formula(paste("y ~ ", predictor_part, sep = ""))
   ##logistics regression based on training dataset
   pCL <- stats::glm(logistic_formula,data=dt_y[tset,],family=binomial,control = list(maxit=lr_maxiter))
+
+
   ##prediction on hold out validation set
   pCLpr <- stats::predict(pCL,dt_y[vset,],type="response")
+
   roc_res <- getROCAll(y[vset],pCLpr)
   #print("PCLpr is:")
   #print(pCLpr)
@@ -51,5 +54,13 @@ genLogisticMetrics <- function(cvFolds_dt,
                   (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))/
     (1- (sum(gc6pos)/sum(gc6pos+gc6neg)*sum(pCLpos)/sum(pCLpos+pCLneg)+
            (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))
+  print("####################################################")
+  print("c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12) is: ")
+  print(pCLTN)
+  print(gc6pos)
+  print(sum(pCLTP+pCLTN)/sum(gc6pos+gc6neg))
+  print((sum(gc6pos)/sum(gc6pos+gc6neg)*sum(pCLpos)/sum(pCLpos+pCLneg)+
+           (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))
+  print(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12))
   return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res))
 }

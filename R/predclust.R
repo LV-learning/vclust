@@ -36,12 +36,16 @@
 #' The information provided here will supersede the information from genclust and validclust.
 #' @param variable_names When data_path is used, the user needs to
 #' specify variable names.
-#' For example, \code{variable_names = c(“x”, “e1”, “e2”, “e3”, “f1”, “f2”, “z1”, “q1”, “w1”, “w2”, “w3”, “u1”, “u2”)}.
+#' For example, \cr
+#' \code{variable_names = }\cr
+#' \code{c('x', 'e1', 'e2', 'e3', 'f1', 'f2', 'z1', 'q1', 'w1', 'w2', 'w3', 'u1', 'u2')}.
 #' These variable names will overwrite the original names when the data file already has variables names (i.e., header).
 #' The user can choose to use those original names by specifying \code{variable_names = NULL}.
+#' @param naString A string indicates what string is interpreted as NA value
+#' in the input data.
 #' @param predictors_names A string vector indicates names of variables to be used as predictors (input variables).
 #' For example, \code{predictors_names = c("x","w1","w2","w3","u1","u2")}.
-#' @param cluster_names When data_path is not used, \code{sync_genclust = TRUE},
+#' @param cluster_names When data_path is not used, \code{sync_genclust = TRUE},\cr
 #' and \code{sync_validclust = FALSE},
 #' the user is expected to use the cluster names from the
 #' summary of the genclust procedure provided in genclust_results.csv.
@@ -67,10 +71,11 @@
 #' of P1+P3 of belonging to the first category and the probability of P2+P4+P5
 #' of belonging to the second category of the label.
 #' @param cluster_label_position A string indicates the location of the
-#' cluster label in prediction. When \code{cluster_label_position="predictor"},
-#' the cluster label defined in label_category1 will be used as a predictor.
+#' cluster label in prediction. \cr
+#' When \code{cluster_label_position="predictor"},
+#' the cluster label defined in label_category1 will be used as a predictor.\cr
 #' When \code{cluster_label_position="predicted"}, the cluster label
-#' will be used as an outcome predicted by provided predictors (input variables).
+#' will be used as an outcome predicted by provided predictors (input variables).\cr
 #' If \code{cluster_label_position="none"}, the cluster label will be omitted in supervised learning.
 #' @param outcome_obs When \code{cluster_label_position = "predictor"}
 #'  or \code{cluster_label_position = "none"},
@@ -110,13 +115,14 @@
 #'
 #' When outcome_cutpoint is a single value, all cutpoint related arguments
 #' can be used together. For example, if \code{outcome_source_variables=c("a","b","c")},
-#' \code{outcome_cutpoint  = 12}, \code{outcome_cutpoint_sign =">="},
+#' \code{outcome_cutpoint  = 12}, \code{outcome_cutpoint_sign =">="},\cr
 #' and \code{outcome_cutpoint_max_min_mean="max"}, all cases with \deqn{max(a, b, c) >= 12}
 #' will be assigned the value of 1, and the rest the value of 0.
 #'
 #' When outcome_cutpoint has multiple values, outcome_max_min_mean will be ignored.
 #' For example, when \code{outcome_source_variables=c("a","b","c")},
-#' \code{outcome_cutpoint = c(12, 13, 14)}, \code{outcome_cutpoint_sign = c(">=", "<", ">")},
+#' \code{outcome_cutpoint = c(12, 13, 14)}, \cr
+#' \code{outcome_cutpoint_sign = c(">=", "<", ">")},
 #'  all cases with \deqn{a>=12 and b<13 and c>14} will be assigned the value of 1,
 #'   and the rest the value of 0.
 #' @param supervised_method A string indicates the type of supervised learning.
@@ -208,6 +214,7 @@ predclust <- function(sync_genclust,
                       output_path_prefix, #
                       data_path, #
                       variable_names, #
+                      naString,
                       predictors_names,
                       cluster_names,
                       label_category1, #
@@ -250,7 +257,7 @@ predclust <- function(sync_genclust,
   if(tolower(trimws(cluster_label_position)) == "predicted"){
     validators <- list(validator(
                                 predicted_cluster_combination = label_category1,
-                                predicted_cluster_n = length(cluster_names),
+                                predicted_cluster_n = cluster_names,
                                 validator_source_variables = predictors_names,
                                 listwise_deletion_variables = listwise_deletion_variables,
                                 validator_type = "direct",
@@ -269,7 +276,7 @@ predclust <- function(sync_genclust,
                                  validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
                                  validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
                                  predicted_cluster_combination = label_category1,
-                                 predicted_cluster_n = length(cluster_names),
+                                 predicted_cluster_n = cluster_names,
                                  validator_source_variables = outcome_obs$outcome_source_variables,
                                  listwise_deletion_variables = listwise_deletion_variables,
                                  validator_type = "flip",
@@ -299,6 +306,7 @@ predclust <- function(sync_genclust,
     covariates <- global_parameters$covariates
     is_covariates <- !sjmisc::is_empty(covariates)
     if(sjmisc::is_empty(variable_names)) variable_names <- global_parameters$variable_names
+    naString <- global_parameters$naString
     y_names <- global_parameters$y_names
 
     print(variable_names)
@@ -321,7 +329,8 @@ predclust <- function(sync_genclust,
         print(x_names1)
       }
       input_dt <- inputDataPrepare(data_path = data_path,
-                                   x_names = x_names1)
+                                   x_names = x_names1,
+                                   naString = naString)
       input_dt <- input_dt[!apply(is.na(input_dt[,y_names,drop=FALSE]),1,all),]
 
       if(tolower(model_type) %in% c("gmm","growth mixture model")){
@@ -588,11 +597,13 @@ predclust <- function(sync_genclust,
       if(sjmisc::is_empty(output_path_prefix)) output_path_prefix <- global_parameters_valid[['output_path_prefix']]
       if(sjmisc::is_empty(data_path)) data_path <- global_parameters_valid[['data_path']]
       if(sjmisc::is_empty(variable_names)) variable_names <- global_parameters_valid[['variable_names']]
+      if(sjmisc::is_empty(naString)) naString <- global_parameters_valid[['naString']]
       if(sjmisc::is_empty(cluster_names)) cluster_names <- global_parameters_valid[['cluster_names']]
     }
     print("start input_dt")
     input_dt <- inputDataPrepare(data_path = data_path,
-                                 x_names = variable_names)
+                                 x_names = variable_names,
+                                 naString = naString)
     print("end input_dt")
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
