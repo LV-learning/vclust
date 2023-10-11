@@ -110,7 +110,8 @@
 #' @param GMM_final_optimizations An integer indicates the number of final stage
 #' optimizations in maximum likelihood optimization of GMM.
 #' @param GMM_ID A string specifies the variable name of ID in the input file.
-#' This ID variable will be included in the final .pp file.
+#' This ID variable will be included in the final .pp file. If it is NULL, rownames will
+#' be used
 #' @param GMM_AUXILIARY A string vector specifies several additional variables
 #' which are intended to included in the final .pp file for subsequent analyses.
 #'
@@ -149,6 +150,23 @@ genclust <- function(model_type,
                     GMM_ID = NULL,
                     GMM_AUXILIARY = NULL
                     ){
+  if (tolower(model_type) %in% c("gmm", "growth mixture model") & is.null(GMM_ID)){
+    input_dt_id <- read.csv(data_path, header = is.null(variable_names))
+    input_dt_id$rowname <- rownames(input_dt_id)
+    GMM_ID <- "rowname"
+    data_path <-
+      paste(output_path_prefix , "input_dt_id.csv", sep = "")
+    write.table(
+      input_dt_id,
+      data_path,
+      sep = ",",
+      col.names = is.null(variable_names),
+      row.names = FALSE
+    )
+    if(!is.null(variable_names)){
+      variable_names <- paste(variable_names, "rowname", sep =" ")
+    }
+  }
   assign("global_parameters", list(), envir = .GlobalEnv)
   global_parameters$listwise_deletion_variables <<- listwise_deletion_variables
   global_parameters$useobs <<- useobs
