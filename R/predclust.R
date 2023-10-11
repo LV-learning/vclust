@@ -214,7 +214,7 @@ predclust <- function(sync_genclust,
                       output_path_prefix, #
                       data_path, #
                       variable_names, #
-                      naString,
+                      naString = NULL,
                       predictors_names,
                       cluster_names,
                       label_category1, #
