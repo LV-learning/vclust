@@ -100,18 +100,22 @@ dichPseudoByPathAllModel <- function(folder_path,
     comb_dt <- as.data.frame(allCombOfAModelOpt(pp_dt, n))
     comb_dt[comb_dt > 1] <- 1
     if(!is.null(label_category1)){
-      label_category1 <- toupper(stringr::str_extract(gsub(" |,","",label_category1),'([pP][1234567890]+)+'))
-      m <- length(unlist(strsplit(label_category1,"P"))[unlist(strsplit(label_category1,"P"))!=""])
-      label_category1 <- paste("C",
-                               m,
-                               "No",
-                               9,
-                               "comb",
-                               label_category1,
-                               sep='')
-      print("label_category1 is ")
-      print(label_category1)
-      comb_dt <- comb_dt[,label_category1,drop=FALSE]
+      label_category1u <- c()
+      for(label_category1i in label_category1){
+        label_category1i <- toupper(stringr::str_extract(gsub(" |,","",label_category1i),'([pP][1234567890]+)+'))
+        m <- length(unlist(strsplit(label_category1i,"P"))[unlist(strsplit(label_category1i,"P"))!=""])
+        label_category1i <- paste("C",
+                                  m,
+                                  "No",
+                                  9,
+                                  "comb",
+                                  label_category1i,
+                                  sep='')
+        print("label_category1i is ")
+        print(label_category1i)
+        label_category1u <- c(label_category1u, label_category1i)
+      }
+      comb_dt <- comb_dt[, label_category1u, drop=FALSE]
     }
 
     PCD_list <- apply(comb_dt, 2, pseudoVec, r_pseudo, seed_num['seed_num_PCD'])

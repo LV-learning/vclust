@@ -65,17 +65,22 @@ validator <- function(validator_cutpoint = NULL,
     supervised_model <- "no model"
   }
   if(!is.null(predicted_cluster_combination)){
-    predicted_cluster_combination <- strsplit(predicted_cluster_combination," |,")[[1]]
-    m <- length(predicted_cluster_combination)
-    predicted_cluster_combination <- paste(paste("P",which(predicted_cluster_n %in% predicted_cluster_combination),sep = ""),collapse="")
-    print(predicted_cluster_combination)
-    predicted_cluster_combination <- paste("C",
-                                           m,
-                                           "No",
-                                           9,
-                                           "comb",
-                                           predicted_cluster_combination,
-                                           sep='')
+    predicted_cluster_combinationu <- c()
+    for(i in predicted_cluster_combination){
+      i <- strsplit(i," |,")[[1]]
+      m <- length(i)
+      i <- paste(paste("P",which(predicted_cluster_n %in% i),sep = ""),collapse="")
+      print(i)
+      i <- paste("C",
+                                             m,
+                                             "No",
+                                             9,
+                                             "comb",
+                                             i,
+                                             sep='')
+      predicted_cluster_combinationu <- c(predicted_cluster_combinationu, i)
+    }
+    predicted_cluster_combination <- predicted_cluster_combinationu
     predicted_cluster_n <- length(predicted_cluster_n)
   }
 

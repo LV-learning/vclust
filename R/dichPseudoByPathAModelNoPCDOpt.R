@@ -23,19 +23,25 @@ dichPseudoByPathAModelNoPCDOpt <- function(pp_dt,
   comb_dt <- as.data.frame(allCombOfAModelOpt(pp_dt, n))
   comb_dt[comb_dt > 1] <- 1
   if(!is.null(label_category1)){
-    label_category1 <- strsplit(label_category1," |,")[[1]]
-    m <- length(label_category1)
-    label_category1 <- paste(paste("P",which(names(pp_dt)[1:(ncol(pp_dt)-1)] %in% label_category1),sep = ""),collapse="")
-    label_category1 <- paste("C",
-                             m,
-                             "No",
-                             9,
-                             "comb",
-                             label_category1,
-                             sep='')
-    print("label_category1 is ")
+    label_category1u <- c()
     print(label_category1)
-    comb_dt <- comb_dt[,label_category1,drop=FALSE]
+    for(label_category1i in label_category1){
+      label_category1i <- strsplit(label_category1i," |,")[[1]]
+      m <- length(label_category1i)
+      label_category1i <- paste(paste("P",which(names(pp_dt)[1:(ncol(pp_dt)-1)] %in% label_category1i),sep = ""),collapse="")
+      print(label_category1i)
+      label_category1i <- paste("C",
+                                m,
+                                "No",
+                                9,
+                                "comb",
+                                label_category1i,
+                                sep='')
+      print("label_category1i is ")
+      print(label_category1i)
+      label_category1u <- c(label_category1u, label_category1i)
+    }
+    comb_dt <- comb_dt[,label_category1u,drop=FALSE]
   }
   diched_comb_dt <- data.frame(comb_dt)
   diched_comb_dt[diched_comb_dt < combined_posterior_prob_threshold] <-

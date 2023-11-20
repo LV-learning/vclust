@@ -63,24 +63,25 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
     for(i in 1:(n-1)){
       tmp_list <- chooseMClassFromNOpt(class_cols_dt=dt_rmna[,c((ncol(dt_rmna)-2),(ncol(dt_rmna) - 1),ncol(dt_rmna))],m=i,n=n)
       if(!is.null(label_category1)){
-        label_category1 <- toupper(stringr::str_extract(gsub(" |,","",label_category1),'([pP][1234567890]+)+'))
-        m <- length(unlist(strsplit(label_category1,"P"))[unlist(strsplit(label_category1,"P"))!=""])
-        label_category1 <- paste("C",
-                                 m,
-                                 "No",
-                                 9,
-                                 "comb",
-                                 label_category1,
-                                 sep='')
-        if(label_category1 %in% names(tmp_list)){
-          tmp_list <- tmp_list[,label_category1,drop=FALSE]
-          dt_comb[[j]] <- tmp_list
-          j <- j + 1
+        for(label_category1i in label_category1){
+          label_category1i <- toupper(stringr::str_extract(gsub(" |,","",label_category1i),'([pP][1234567890]+)+'))
+          m <- length(unlist(strsplit(label_category1i,"P"))[unlist(strsplit(label_category1i,"P"))!=""])
+          label_category1i <- paste("C",
+                                   m,
+                                   "No",
+                                   9,
+                                   "comb",
+                                   label_category1i,
+                                   sep='')
+          if(label_categoryi %in% names(tmp_list)){
+            dt_comb[[j]] <- tmp_list[,label_category1i,drop=FALSE]
+            j <- j + 1
+          }
         }
       }else{
         dt_comb[[i]] <- tmp_list
       }
-      
+
     }
     if (validation_data_fraction != 1) {
       final_metrics <- data.frame()
@@ -141,9 +142,9 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
             final_metrics <- rbind(final_metrics, m_res)
           }
         }
-        
+
       }
-      
+
       final_metrics$validation_group <- validators_name[v_id]
       train_id_column_name <-
         paste(validators_name[v_id], "_train_ind", sep = "")
@@ -156,9 +157,9 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
         if(!is.null(use_combinations)){
           mComb <-
             mComb[, names(mComb) %in% use_combinations, drop = FALSE]
-          
+
         }
-        
+
         if (ncol(mComb) != 0) {
           for (aChoiceProb in 1:ncol(mComb)) {
             if (if_CV) {
@@ -196,12 +197,12 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
             final_metrics <- rbind(final_metrics, m_res)
           }
         }
-        
+
       }
-      
+
       final_metrics$validation_group <- validators_name[v_id]
     }
-    
+
     rname_column_name <-
       paste(validators_name[v_id], "_rnames", sep = "")
     final_out_list[[rname_column_name]] <-

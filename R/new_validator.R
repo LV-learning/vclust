@@ -23,7 +23,7 @@ new_validator <- function(thresholds,
   stopifnot(sjmisc::is_empty(signs)|is.character(signs))
   stopifnot(sjmisc::is_empty(max_min_mean)|is.character(max_min_mean))
   stopifnot((length(seed_num) == 3))
-  stopifnot(length(predicted_cluster_combination) <= 1)
+  #stopifnot(length(predicted_cluster_combination) <= 1)
   stopifnot(length(predicted_cluster_n) <= 1)
   ##one validator can only have one type
   stopifnot(identical(length(validator_type), 1L))

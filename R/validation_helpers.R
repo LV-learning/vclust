@@ -223,17 +223,24 @@ allCombOfAModelOpt <- function(pp_dt,n){
 
 allCombOfAModelFromCategoryOpt <- function(pp_dt,n,label_category1=NULL){
   class_cols_dt <- as.data.frame(pp_dt[,ncol(pp_dt)])
+  rowname_tmp <- rownames(class_cols_dt)
   class_cols_dt <- sjmisc::to_dummy(class_cols_dt)
+  rownames(class_cols_dt) <- rowname_tmp
   final_list <- list()
   j <- 1
   for(i in 1:(n-1)){
     tmp_list <- chooseMClassFromNOpt(class_cols_dt=class_cols_dt,m=i,n=n)
     if(!is.null(label_category1)){
-      if(label_category1 %in% names(tmp_list)){
-        tmp_list <- tmp_list[,label_category1,drop=FALSE]
-        final_list[[j]] <- tmp_list
-        j <- j + 1
+      for(i in label_category1){
+        print('###name###')
+        print(names(tmp_list))
+        print('##########')
+        if(i %in% names(tmp_list)){
+          final_list[[j]] <- tmp_list[,i,drop=FALSE]
+          j <- j + 1
+        }
       }
+
     }else{
       final_list[[i]] <- tmp_list
     }

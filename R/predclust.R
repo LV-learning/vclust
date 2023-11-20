@@ -231,9 +231,33 @@ predclust <- function(sync_genclust,
                       repeated_CV, #
                       if_PCD, #
                       r_PCD, #
-                      lr_maxiter){ #
+                      lr_maxiter,
+                      customized = F,
+                      reference = NULL,
+                      comparison = NULL){ #
   if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
     stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
+  }
+
+
+  label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
+
+  if(!sync_genclust){
+    if(isTRUE(sync_validclust)){
+      if(sjmisc::is_empty(output_path_prefix)) output_path_prefix <- global_parameters_valid[['output_path_prefix']]
+      if(sjmisc::is_empty(data_path)) data_path <- global_parameters_valid[['data_path']]
+      if(sjmisc::is_empty(variable_names)) variable_names <- global_parameters_valid[['variable_names']]
+      if(sjmisc::is_empty(naString)) naString <- global_parameters_valid[['naString']]
+      if(sjmisc::is_empty(cluster_names)) cluster_names <- global_parameters_valid[['cluster_names']]
+    }
+    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(cluster_names %in% reference), sep = "")
+    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(cluster_names %in% comparison), sep = "")
+  }
+
+  if(customized){
+    if_PCD <- FALSE
+    label_category1 <- reference
+    comparison <- paste(comparison, collapse=",")
   }
   ####################################################################
   ###########construct validators by provided arguments###############
@@ -245,10 +269,10 @@ predclust <- function(sync_genclust,
   print("predictors_names is: ")
   print(seed_numbers['seed_num_split'])
   print(predictors_names)
-  label_category1 <- paste(label_category1,collapse=",")
+  label_category1 <- paste(label_category1, collapse=",")
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
-  kappa_results_threshold_final_metrics <- 0.05
+  kappa_results_threshold_final_metrics <- 0.005
   combined_posterior_prob_threshold <- 0.5
   if_listwise_deletion <- FALSE
   pcd_dropping_pct <- c(0.1,0.1,1)
@@ -256,7 +280,7 @@ predclust <- function(sync_genclust,
   seed_num['seed_num_PCD'] <- seed_num['seed_num_pcd']
   if(tolower(trimws(cluster_label_position)) == "predicted"){
     validators <- list(validator(
-                                predicted_cluster_combination = label_category1,
+                                predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
                                 predicted_cluster_n = cluster_names,
                                 validator_source_variables = predictors_names,
                                 listwise_deletion_variables = listwise_deletion_variables,
@@ -275,7 +299,7 @@ predclust <- function(sync_genclust,
     validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
                                  validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
                                  validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
-                                 predicted_cluster_combination = label_category1,
+                                 predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
                                  predicted_cluster_n = cluster_names,
                                  validator_source_variables = outcome_obs$outcome_source_variables,
                                  listwise_deletion_variables = listwise_deletion_variables,
@@ -407,7 +431,7 @@ predclust <- function(sync_genclust,
                                        optimize_prob_thresh = 0.5,
                                        pcd_dropping_pct,
                                        if_CV,
-                                       label_category1 = label_category1)
+                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
       }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
 
         res <- dichPseudoByPathAllModelMclust(folder_path,
@@ -431,7 +455,7 @@ predclust <- function(sync_genclust,
                                                    optimize_prob_thresh = 0.5,
                                                    pcd_dropping_pct,
                                                    if_CV,
-                                                   label_category1 = label_category1)
+                                                   label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
 
       }
     }else
@@ -458,7 +482,8 @@ predclust <- function(sync_genclust,
                                              optimize_prob_thresh = 0.5,
                                              pcd_dropping_pct,
                                              if_CV,
-                                             label_category1 = label_category1)
+                                             label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                             customized = customized)
       }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
 
         res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
@@ -482,7 +507,8 @@ predclust <- function(sync_genclust,
                                                    optimize_prob_thresh = 0.5,
                                                    pcd_dropping_pct,
                                                    if_CV,
-                                                   label_category1 = label_category1)
+                                                   label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                   customized = customized)
 
       }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means")){
         res <- dichPseudoByPathAllModelKmeans(folder_path,
@@ -505,7 +531,7 @@ predclust <- function(sync_genclust,
                                               optimize_prob_thresh,
                                               pcd_dropping_pct,
                                               if_CV,
-                                              label_category1 = label_category1)
+                                              label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
 
       }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group")){
         res <- dichPseudoByPathAllModelO(folder_path,
@@ -522,7 +548,7 @@ predclust <- function(sync_genclust,
                                          lr_maxiter,
                                          pcd_dropping_pct,
                                          if_CV,
-                                         label_category1 = label_category1)
+                                         label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
       }
     }
     if(train_fraction == 1){
@@ -533,7 +559,7 @@ predclust <- function(sync_genclust,
                   Supervised_spec3 = "-",
                   Cluster_n = length(cluster_names),
                   Cluster_names = paste(cluster_names,collapse = ""),
-                  Label_category1 = label_category1,
+                  Label_category1 = combination_of_class_probabilities,
                   Label_position = cluster_label_position,
                   Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                   kappa = kappa_mean,
@@ -555,7 +581,7 @@ predclust <- function(sync_genclust,
                   Supervised_spec3 = "-",
                   Cluster_n = length(cluster_names),
                   Cluster_names = paste(cluster_names,collapse = ""),
-                  Label_category1 = label_category1,
+                  Label_category1 = combination_of_class_probabilities,
                   Label_position = cluster_label_position,
                   Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                   kappa_train = kappa_mean_cv,
@@ -637,7 +663,7 @@ predclust <- function(sync_genclust,
                                 optimize_prob_thresh = 0.5,
                                 pcd_dropping_pct,
                                 if_CV,
-                                label_category1 = label_category1)
+                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -646,7 +672,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
                       Cluster_names = paste(cluster_names,collapse = ""),
-                      Label_category1 = label_category1,
+                      Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                       kappa = kappa_mean,
@@ -668,7 +694,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
                       Cluster_names = paste(cluster_names,collapse = ""),
-                      Label_category1 = label_category1,
+                      Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                       kappa_train = kappa_mean_cv,
@@ -711,7 +737,8 @@ predclust <- function(sync_genclust,
                              optimize_prob_thresh = 0.5,
                              pcd_dropping_pct,
                              if_CV,
-                             label_category1 = label_category1)
+                             label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                             customized = customized)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -720,7 +747,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
                       Cluster_names = paste(cluster_names,collapse = ""),
-                      Label_category1 = label_category1,
+                      Label_category1 = label_group1,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                       kappa = kappa,
@@ -742,7 +769,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
                       Cluster_names = paste(cluster_names,collapse = ""),
-                      Label_category1 = label_category1,
+                      Label_category1 = label_group1,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                       kappa_train = kappa_mean_cv,
@@ -786,7 +813,7 @@ predclust <- function(sync_genclust,
                                optimize_prob_thresh = 0.5,
                                pcd_dropping_pct,
                                if_CV,
-                               label_category1 = label_category1)
+                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
       if(train_fraction == 1){
         res <- res %>%
           transmute(Supervised_method = supervised_method,
@@ -795,7 +822,7 @@ predclust <- function(sync_genclust,
                     Supervised_spec3 = "-",
                     Cluster_n = length(cluster_names),
                     Cluster_names = paste(cluster_names,collapse = ""),
-                    Label_category1 = label_category1,
+                    Label_category1 = label_group1,
                     Label_position = cluster_label_position,
                     Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                     kappa = kappa,
@@ -817,7 +844,7 @@ predclust <- function(sync_genclust,
                     Supervised_spec3 = "-",
                     Cluster_n = length(cluster_names),
                     Cluster_names = paste(cluster_names,collapse = ""),
-                    Label_category1 = label_category1,
+                    Label_category1 = label_group1,
                     Label_position = cluster_label_position,
                     Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                     kappa_train = kappa_mean_cv,

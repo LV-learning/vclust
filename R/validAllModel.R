@@ -18,7 +18,8 @@ validAllModel <- function(cluster_names,
                           if_CV,
                           label_category1 = NULL,
                           kappa_filter_threshold = NULL,
-                          kappa_results_threshold = NULL){
+                          kappa_results_threshold = NULL,
+                          customized = F){
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -29,7 +30,7 @@ validAllModel <- function(cluster_names,
   if (dir.exists(final_predicted_cluster_res_dir) == FALSE) {
      dir.create(final_predicted_cluster_res_dir)
   }
-  
+
   final_pp_if_validators_res_dir <-
     paste(output_path_prefix, "pp_and_if_train_validators/", sep = "")
   if (dir.exists(final_pp_if_validators_res_dir) == FALSE) {
@@ -46,11 +47,11 @@ validAllModel <- function(cluster_names,
   pp_dt <- input_dt[,cluster_names]
   names(pp_dt) <- paste("P",1:ncol(pp_dt),sep = "")
   pp_dt$placeholder <- 1
-  
+
   if (!is.null(kappa_filter_threshold) |
       !is.null(kappa_results_threshold)) {
     use_combs_all <- data.frame()
-    
+
     acomb <- dichPseudoBestZAModel(
       folder_path = NULL,
       ##model classes
@@ -66,12 +67,12 @@ validAllModel <- function(cluster_names,
       pp_dt = pp_dt
     )
     use_combs_all <- rbind(use_combs_all, acomb)
-    
+
     if (!is.null(kappa_results_threshold)) {
       use_combs_all <-
         use_combs_all[use_combs_all$kappas > kappa_results_threshold, ]
     }
-    
+
     use_combs_all <-
       use_combs_all[order(use_combs_all$kappas, decreasing = TRUE), ]
     if (!is.null(kappa_filter_threshold)) {
@@ -85,10 +86,10 @@ validAllModel <- function(cluster_names,
   ##Run n range of no PCD/CV results and save results
   ##save top x combinations' name
   ##run n dichPseudoBypathamodel
-  
+
   ##out put dich without PCD
   ##below are validations
-  
+
   # dich616_dt <- allCombOfAModelOpt(pp_dt, n)
   # dich616_dt <- dichProbAllCombOfAModel(dich616_dt)
   # dich616_dt$n_classes <- n
@@ -111,27 +112,52 @@ validAllModel <- function(cluster_names,
     print("use_combs is: ")
     print(use_combs)
     if (length(use_combs) != 0) {
-      res_n <- dichPseudoByPathAModelNoPCDOpt(
-        pp_dt = pp_dt,
-        ##model classes
-        n = n,
-        K_fold = K_fold,
-        repeated_folds_R = repeated_folds_R,
-        input_dt = input_dt,
-        x_names = x_names,
-        validators = validators,
-        seed_num = seed_num,
-        validation_data_fraction = validation_data_fraction,
-        if_listwise_deletion = if_listwise_deletion,
-        y_names = y_names,
-        lr_maxiter = lr_maxiter,
-        use_combinations = use_combs,
-        combined_posterior_prob_threshold =
-          combined_posterior_prob_threshold,
-        pcd_dropping_pct = pcd_dropping_pct,
-        if_CV = if_CV,
-        label_category1 = label_category1
-      )
+      if(customized){
+        pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+        res_n <- dichPseudoByPathAModelNoPCDCategoryOpt(
+          pp_dt = pp_dt,
+          ##model classes
+          n = n,
+          K_fold = K_fold,
+          repeated_folds_R = repeated_folds_R,
+          input_dt = input_dt,
+          x_names = x_names,
+          validators = validators,
+          seed_num = seed_num,
+          validation_data_fraction = validation_data_fraction,
+          kappa_filter_threshold =  kappa_filter_threshold,
+          if_listwise_deletion = if_listwise_deletion,
+          y_names = y_names,
+          lr_maxiter = lr_maxiter,
+          use_combinations = use_combs,
+          pcd_dropping_pct = pcd_dropping_pct,
+          if_CV = if_CV,
+          label_category1 = label_category1
+        )
+      }else{
+        res_n <- dichPseudoByPathAModelNoPCDOpt(
+          pp_dt = pp_dt,
+          ##model classes
+          n = n,
+          K_fold = K_fold,
+          repeated_folds_R = repeated_folds_R,
+          input_dt = input_dt,
+          x_names = x_names,
+          validators = validators,
+          seed_num = seed_num,
+          validation_data_fraction = validation_data_fraction,
+          if_listwise_deletion = if_listwise_deletion,
+          y_names = y_names,
+          lr_maxiter = lr_maxiter,
+          use_combinations = use_combs,
+          combined_posterior_prob_threshold =
+            combined_posterior_prob_threshold,
+          pcd_dropping_pct = pcd_dropping_pct,
+          if_CV = if_CV,
+          label_category1 = label_category1
+        )
+      }
+
       if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
         write.csv(
           res_n[["dt_y_test"]],
@@ -152,33 +178,57 @@ validAllModel <- function(cluster_names,
                                                 res_n[["id_df"]])
     }
   }else{
-    res_n <- dichPseudoByPathAModelNoPCD(
-      pp_dt = pp_dt,
-      ##model classes
-      n = n,
-      K_fold = K_fold,
-      repeated_folds_R = repeated_folds_R,
-      input_dt = input_dt,
-      x_names = x_names,
-      validators = validators,
-      seed_num = seed_num,
-      validation_data_fraction = validation_data_fraction,
-      if_listwise_deletion = if_listwise_deletion,
-      y_names = y_names,
-      lr_maxiter = lr_maxiter,
-      combined_posterior_prob_threshold =
-        combined_posterior_prob_threshold,
-      pcd_dropping_pct = pcd_dropping_pct,
-      if_CV = if_CV,
-      label_category1 = label_category1
-    )
+
+    if(customized){
+      pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+      res_n <- dichPseudoByPathAModelNoPCDCategory(
+        pp_dt = pp_dt,
+        ##model classes
+        n = n,
+        K_fold = K_fold,
+        repeated_folds_R = repeated_folds_R,
+        input_dt = input_dt,
+        x_names = x_names,
+        validators = validators,
+        seed_num = seed_num,
+        validation_data_fraction = validation_data_fraction,
+        if_listwise_deletion = if_listwise_deletion,
+        y_names = y_names,
+        lr_maxiter = lr_maxiter,
+        pcd_dropping_pct = pcd_dropping_pct,
+        if_CV = if_CV,
+        label_category1 = label_category1
+      )
+    }else{
+      res_n <- dichPseudoByPathAModelNoPCD(
+        pp_dt = pp_dt,
+        ##model classes
+        n = n,
+        K_fold = K_fold,
+        repeated_folds_R = repeated_folds_R,
+        input_dt = input_dt,
+        x_names = x_names,
+        validators = validators,
+        seed_num = seed_num,
+        validation_data_fraction = validation_data_fraction,
+        if_listwise_deletion = if_listwise_deletion,
+        y_names = y_names,
+        lr_maxiter = lr_maxiter,
+        combined_posterior_prob_threshold =
+          combined_posterior_prob_threshold,
+        pcd_dropping_pct = pcd_dropping_pct,
+        if_CV = if_CV,
+        label_category1 = label_category1
+      )
+    }
+
     metrics <- res_n[["metrics"]]
     metrics$n_classes <- n
     final_metrics_res <- rbind(final_metrics_res, metrics)
     pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                               res_n[["id_df"]])
   }
-  
+
   if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
      write.csv(
        res_n[["dt_y_test"]],
@@ -192,7 +242,7 @@ validAllModel <- function(cluster_names,
        row.names = FALSE
      )
   }
-  
+
   write.csv(
     pp_dt_and_if_in_validators_train,
     paste(
@@ -204,7 +254,7 @@ validAllModel <- function(cluster_names,
     ),
     row.names = FALSE
   )
-  
+
   write.csv(res_n[["rocs"]],
             paste(final_roc_res_dir,
                   n,
@@ -212,10 +262,10 @@ validAllModel <- function(cluster_names,
                   ".csv",
                   sep = ""),
             row.names = FALSE)
-  
+
 
   print("end model")
-  
+
   #sapply(res_allModel[[2]]$whichSplit,FUN = get_comb_from_whichSplit )
   print(final_metrics_res)
   final_metrics_res$choose_m <-
@@ -256,7 +306,7 @@ validAllModel <- function(cluster_names,
       )
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
-    
+
   } else{
     names(final_metrics_res) <-
       c(
@@ -283,7 +333,7 @@ validAllModel <- function(cluster_names,
   }
   #print("finished write metrics results2")
   final_metrics_res_w_aicbic <- final_metrics_res
-  
+
   #print("finished aic bic results")
   if (validation_data_fraction != 1) {
     #print(final_metrics_res_w_aicbic)
@@ -316,7 +366,7 @@ validAllModel <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )]
-    
+
     final_metrics_res_w_aicbic <-
       arrange(final_metrics_res_w_aicbic,
               validation_group,
@@ -324,7 +374,7 @@ validAllModel <- function(cluster_names,
     if (!is.null(kappa_results_threshold_final_metrics)) {
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$kappa_mean_cv > kappa_results_threshold_final_metrics |
                                                                  !final_metrics_res_w_aicbic$validation_group %in% c("validators1"), ]
-      
+
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[paste(final_metrics_res_w_aicbic$n,
                                                                      final_metrics_res_w_aicbic$whichSplit,
                                                                      sep = "") %in%
@@ -332,7 +382,7 @@ validAllModel <- function(cluster_names,
                                                                        final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$validation_group %in% c("validators1"), "whichSplit"],
                                                                        sep = ""), ]
     }
-    
+
     # write.csv(
     #   final_metrics_res_w_aicbic,
     #   paste(
@@ -341,7 +391,7 @@ validAllModel <- function(cluster_names,
     #     sep = ""
     #   )
     # )
-    
+
   } else{
     final_metrics_res_w_aicbic <-
       final_metrics_res_w_aicbic[, c(
@@ -409,7 +459,7 @@ validAllModel <- function(cluster_names,
       group_by(exclusive_class) %>%
       summarise(max_kappa = max(kappa_mean, na.rm = TRUE)) %>%
       ungroup()
-    
+
     final_metrics_res_w_aicbic <-
       merge(
         final_metrics_res_w_aicbic,
@@ -418,13 +468,13 @@ validAllModel <- function(cluster_names,
         by.y = 'exclusive_class',
         all.x = TRUE
       )
-    
+
     final_metrics_res_w_aicbic <-
       arrange(final_metrics_res_w_aicbic,
               validation_group,
               #desc(n_classes),
               desc(max_kappa))
-    
+
     final_metrics_res_w_aicbic <-
       final_metrics_res_w_aicbic[, c(
         "accuracy_mean",
@@ -447,7 +497,7 @@ validAllModel <- function(cluster_names,
     if (!is.null(kappa_results_threshold_final_metrics)) {
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$kappa_mean > kappa_results_threshold_final_metrics |
                                                                  !final_metrics_res_w_aicbic$validation_group %in% c("validators1"), ]
-      
+
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[paste(final_metrics_res_w_aicbic$n,
                                                                      final_metrics_res_w_aicbic$whichSplit,
                                                                      sep = "") %in%
@@ -456,7 +506,7 @@ validAllModel <- function(cluster_names,
                                                                        sep = ""), ]
     }
     cluster_namesbu <- cluster_names
-    final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic %>% 
+    final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic %>%
       transmute(model_type = "-",
                 model_spec1 = "-",
                 model_spec2 = "-",
@@ -476,10 +526,10 @@ validAllModel <- function(cluster_names,
                 AUC = AUC_mean,
                 AUC_SE = AUC_sd
                 )
-    
-    
+
+
   }
-  
-  
+
+
   return(final_metrics_res_w_aicbic)
 }

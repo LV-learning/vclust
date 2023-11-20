@@ -203,9 +203,30 @@ validclust <- function(sync_genclust,
                        kappa_filter_maxN,
                        kappa_filter_value,
                        kappa_filter_results,
-                       validators
+                       validators,
+                       customized = F,
+                       reference = NULL,
+                       comparison = NULL
 ){
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
+  if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
+  if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
+  label_category1 <- NULL
+  if(!sync_genclust){
+    class_range <- length(info_genclust[['cluster_names']])
+    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(info_genclust[['cluster_names']] %in% reference), sep = "")
+    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(info_genclust[['cluster_names']] %in% comparison), sep = "")
+  }
+  if(customized){
+    if(sjmisc::is_empty(comparison)){
+      all_clusters <- paste("P",1:class_range, sep="")
+      comparison <- all_clusters[!all_clusters %in% reference]
+    }else{
+      comparison <- paste(comparison, collapse=",")
+    }
+    reference <- paste(reference, collapse=",")
+    label_category1 <- c(reference,comparison)
+  }
   repeated_CV = 1
   if_PCD <- FALSE
   kappa_filter_threshold <- kappa_filter_maxN
@@ -329,7 +350,9 @@ validclust <- function(sync_genclust,
                                            combined_posterior_prob_threshold,
                                            optimize_prob_thresh = 0.5,
                                            pcd_dropping_pct,
-                                           if_CV)
+                                           if_CV,
+                                           label_category1 = label_category1,
+                                           customized = customized)
       res <- res %>%
         transmute(model_type = "GMM",
                   model_spec1 = global_parameters$GMM_trend,
@@ -383,7 +406,9 @@ validclust <- function(sync_genclust,
                                                  combined_posterior_prob_threshold,
                                                  optimize_prob_thresh = 0.5,
                                                  pcd_dropping_pct,
-                                                 if_CV)
+                                                 if_CV,
+                                                 label_category1 = label_category1,
+                                                 customized = customized)
       res <- res %>%
         transmute(model_type = "MBC",
                   model_spec1 = global_parameters$MBCtype,
@@ -434,7 +459,8 @@ validclust <- function(sync_genclust,
                                             kappa_results_threshold_final_metrics,
                                             optimize_prob_thresh = 0.5,
                                             pcd_dropping_pct,
-                                            if_CV)
+                                            if_CV,
+                                            label_category1)
       res <- res %>%
         transmute(model_type = "K-means",
                   model_spec1 = "-",
@@ -480,7 +506,8 @@ validclust <- function(sync_genclust,
                                        y_names,
                                        lr_maxiter,
                                        pcd_dropping_pct,
-                                       if_CV)
+                                       if_CV,
+                                       label_category1)
       res <- res %>%
         transmute(model_type = "Ogroup",
                   model_spec1 = "-",
@@ -555,9 +582,10 @@ validclust <- function(sync_genclust,
                            optimize_prob_thresh = 0.5,
                            pcd_dropping_pct,
                            if_CV,
-                           label_category1 = NULL,
+                           label_category1 = label_category1,
                            kappa_filter_threshold = kappa_filter_threshold,
-                           kappa_results_threshold = kappa_results_threshold)
+                           kappa_results_threshold = kappa_results_threshold,
+                           customized = customized)
 
     }else{
       res <- validAllModel_Cat(cluster_names = info_genclust[['cluster_names']],
@@ -576,7 +604,7 @@ validclust <- function(sync_genclust,
                                optimize_prob_thresh = 0.5,
                                pcd_dropping_pct,
                                if_CV,
-                               label_category1 = NULL,
+                               label_category1 = label_category1,
                                kappa_filter_threshold = kappa_filter_threshold,
                                kappa_results_threshold = kappa_results_threshold)
     }

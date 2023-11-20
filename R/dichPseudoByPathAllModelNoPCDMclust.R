@@ -19,7 +19,8 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
                                                 optimize_prob_thresh = 0.5,
                                                 pcd_dropping_pct,
                                                 if_CV,
-                                                label_category1 = NULL) {
+                                                label_category1 = NULL,
+                                                customized = F) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -106,27 +107,54 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
       print("use_combs is: ")
       print(use_combs)
       if (length(use_combs) != 0) {
-        res_n <- dichPseudoByPathAModelNoPCDOpt(
-          pp_dt = pp_dt,
-          ##model classes
-          n = n,
-          K_fold = K_fold,
-          repeated_folds_R = repeated_folds_R,
-          input_dt = input_dt,
-          x_names = x_names,
-          validators = validators,
-          seed_num = seed_num,
-          validation_data_fraction = validation_data_fraction,
-          if_listwise_deletion = if_listwise_deletion,
-          y_names = y_names,
-          lr_maxiter = lr_maxiter,
-          use_combinations = use_combs,
-          combined_posterior_prob_threshold =
-            combined_posterior_prob_threshold,
-          pcd_dropping_pct = pcd_dropping_pct,
-          if_CV = if_CV,
-          label_category1 = label_category1
-        )
+
+        if(customized){
+          pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+          res_n <- dichPseudoByPathAModelNoPCDCategoryOpt(
+            pp_dt = pp_dt,
+            ##model classes
+            n = n,
+            K_fold = K_fold,
+            repeated_folds_R = repeated_folds_R,
+            input_dt = input_dt,
+            x_names = x_names,
+            validators = validators,
+            seed_num = seed_num,
+            validation_data_fraction = validation_data_fraction,
+            kappa_filter_threshold =  kappa_filter_threshold,
+            if_listwise_deletion = if_listwise_deletion,
+            y_names = y_names,
+            lr_maxiter = lr_maxiter,
+            use_combinations = use_combs,
+            pcd_dropping_pct = pcd_dropping_pct,
+            if_CV = if_CV,
+            label_category1 = label_category1
+          )
+        }else
+        {
+          res_n <- dichPseudoByPathAModelNoPCDOpt(
+            pp_dt = pp_dt,
+            ##model classes
+            n = n,
+            K_fold = K_fold,
+            repeated_folds_R = repeated_folds_R,
+            input_dt = input_dt,
+            x_names = x_names,
+            validators = validators,
+            seed_num = seed_num,
+            validation_data_fraction = validation_data_fraction,
+            if_listwise_deletion = if_listwise_deletion,
+            y_names = y_names,
+            lr_maxiter = lr_maxiter,
+            use_combinations = use_combs,
+            combined_posterior_prob_threshold =
+              combined_posterior_prob_threshold,
+            pcd_dropping_pct = pcd_dropping_pct,
+            if_CV = if_CV,
+            label_category1 = label_category1
+          )
+        }
+
         if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
           write.csv(
             res_n[["dt_y_test"]],
@@ -165,26 +193,49 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
                   row.names = FALSE)
       }
     } else{
-      res_n <- dichPseudoByPathAModelNoPCD(
-        pp_dt = pp_dt,
-        ##model classes
-        n = n,
-        K_fold = K_fold,
-        repeated_folds_R = repeated_folds_R,
-        input_dt = input_dt,
-        x_names = x_names,
-        validators = validators,
-        seed_num = seed_num,
-        validation_data_fraction = validation_data_fraction,
-        if_listwise_deletion = if_listwise_deletion,
-        y_names = y_names,
-        lr_maxiter = lr_maxiter,
-        combined_posterior_prob_threshold =
-          combined_posterior_prob_threshold,
-        pcd_dropping_pct = pcd_dropping_pct,
-        if_CV = if_CV,
-        label_category1 = label_category1
-      )
+
+      if(customized){
+        pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+        res_n <- dichPseudoByPathAModelNoPCDCategory(
+          pp_dt = pp_dt,
+          ##model classes
+          n = n,
+          K_fold = K_fold,
+          repeated_folds_R = repeated_folds_R,
+          input_dt = input_dt,
+          x_names = x_names,
+          validators = validators,
+          seed_num = seed_num,
+          validation_data_fraction = validation_data_fraction,
+          if_listwise_deletion = if_listwise_deletion,
+          y_names = y_names,
+          lr_maxiter = lr_maxiter,
+          pcd_dropping_pct = pcd_dropping_pct,
+          if_CV = if_CV,
+          label_category1 = label_category1
+        )
+      }else{
+        res_n <- dichPseudoByPathAModelNoPCD(
+          pp_dt = pp_dt,
+          ##model classes
+          n = n,
+          K_fold = K_fold,
+          repeated_folds_R = repeated_folds_R,
+          input_dt = input_dt,
+          x_names = x_names,
+          validators = validators,
+          seed_num = seed_num,
+          validation_data_fraction = validation_data_fraction,
+          if_listwise_deletion = if_listwise_deletion,
+          y_names = y_names,
+          lr_maxiter = lr_maxiter,
+          combined_posterior_prob_threshold =
+            combined_posterior_prob_threshold,
+          pcd_dropping_pct = pcd_dropping_pct,
+          if_CV = if_CV,
+          label_category1 = label_category1
+        )
+      }
       # if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
       #   write.csv(
       #     res_n[["dt_y_test"]],
