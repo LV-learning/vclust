@@ -232,9 +232,6 @@ allCombOfAModelFromCategoryOpt <- function(pp_dt,n,label_category1=NULL){
     tmp_list <- chooseMClassFromNOpt(class_cols_dt=class_cols_dt,m=i,n=n)
     if(!is.null(label_category1)){
       for(i in label_category1){
-        print('###name###')
-        print(names(tmp_list))
-        print('##########')
         if(i %in% names(tmp_list)){
           final_list[[j]] <- tmp_list[,i,drop=FALSE]
           j <- j + 1
