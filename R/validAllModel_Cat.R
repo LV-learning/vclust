@@ -23,7 +23,7 @@ validAllModel_Cat <- function(cluster_names,
   # if (dir.exists(final_dich_res_dir) == FALSE) {
   #   dir.create(final_dich_res_dir)
   # }
-  
+
   final_pp_if_validators_res_dir <-
     paste(output_path_prefix, "pp_and_if_train_validators/", sep = "")
   if (dir.exists(final_pp_if_validators_res_dir) == FALSE) {
@@ -34,19 +34,19 @@ validAllModel_Cat <- function(cluster_names,
   if (dir.exists(final_roc_res_dir) == FALSE) {
     dir.create(final_roc_res_dir)
   }
-  
+
   final_predicted_cluster_res_dir <-
     paste(output_path_prefix, "predicted_cluster_results/", sep = "")
   if (dir.exists(final_predicted_cluster_res_dir) == FALSE) {
     dir.create(final_predicted_cluster_res_dir)
   }
-  
+
   final_roc_res <- data.frame()
   ##import input data
   final_metrics_res <- data.frame()
-  n = length(cluster_names)
+  n <- length(cluster_names)
   pp_dt <- input_dt[,cluster_names]
-  
+
   if (!is.null(kappa_filter_threshold) |
       !is.null(kappa_results_threshold)) {
     use_combs_all <- data.frame()
@@ -66,20 +66,20 @@ validAllModel_Cat <- function(cluster_names,
     )
     #kappas,comb_name,n
     use_combs_all <- rbind(use_combs_all, acomb)
-  
+
     if (!is.null(kappa_results_threshold)) {
       use_combs_all <-
         use_combs_all[use_combs_all$kappas > kappa_results_threshold, ]
     }
     use_combs_all <-
       use_combs_all[order(use_combs_all$kappas, decreasing = TRUE), ]
-    
+
     if (!is.null(kappa_filter_threshold)) {
       if (nrow(use_combs_all) > kappa_filter_threshold) {
         use_combs_all <- use_combs_all[1:kappa_filter_threshold, ]
       }
     }
-    
+
     print("use_combs_all is:")
     print(use_combs_all)
   }
@@ -91,7 +91,7 @@ validAllModel_Cat <- function(cluster_names,
     print(use_combs)
     if(length(use_combs) != 0) use_combs2 = use_combs
   }
-  
+
   input_dt <- input_dt[,!(names(input_dt) %in% cluster_names)]
   res_n <- dichPseudoByPathAModelNoPCDCategory_syncF(
     pp_dt = pp_dt,
@@ -112,7 +112,7 @@ validAllModel_Cat <- function(cluster_names,
     use_combinations = use_combs2,
     label_category1 = label_category1
   )
-  
+
   if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
     write.csv(
       res_n[["dt_y_test"]],
@@ -150,7 +150,7 @@ validAllModel_Cat <- function(cluster_names,
                   sep = ""),
             row.names = FALSE)
   print("end model")
-  
+
   #sapply(res_allModel[[2]]$whichSplit,FUN = get_comb_from_whichSplit )
   final_metrics_res$choose_m <-
     sapply(final_metrics_res$whichSplit, FUN = get_choose_m_from_whichSplit)
@@ -158,7 +158,7 @@ validAllModel_Cat <- function(cluster_names,
     sapply(final_metrics_res$whichSplit, FUN = get_num_from_whichSplit)
   final_metrics_res$combination_of_class_prob <-
     sapply(final_metrics_res$whichSplit, FUN = get_comb_from_whichSplit)
-  
+
   if (validation_data_fraction != 1) {
     names(final_metrics_res) <-
       c(
@@ -191,7 +191,7 @@ validAllModel_Cat <- function(cluster_names,
       )
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
-    
+
   } else{
     names(final_metrics_res) <-
       c(
@@ -217,8 +217,8 @@ validAllModel_Cat <- function(cluster_names,
     #print("finished write metrics results")
   }
   #print("finished write metrics results2")
-  
-  
+
+
   final_metrics_res_w_aicbic <- final_metrics_res
   #final_metrics_res_w_aicbic <- final_metrics_res
   #print("finished aic bic results")
@@ -253,7 +253,7 @@ validAllModel_Cat <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )]
-    
+
     final_metrics_res_w_aicbic <-
       arrange(final_metrics_res_w_aicbic,
               validation_group,
@@ -261,7 +261,7 @@ validAllModel_Cat <- function(cluster_names,
     if (!is.null(kappa_results_threshold_final_metrics)) {
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$kappa_mean_cv > kappa_results_threshold_final_metrics |
                                                                  !final_metrics_res_w_aicbic$validation_group %in% c("validators1"), ]
-      
+
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[paste(final_metrics_res_w_aicbic$n,
                                                                      final_metrics_res_w_aicbic$whichSplit,
                                                                      sep = "") %in%
@@ -269,7 +269,7 @@ validAllModel_Cat <- function(cluster_names,
                                                                        final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$validation_group %in% c("validators1"), "whichSplit"],
                                                                        sep = ""), ]
     }
-    
+
     # write.csv(
     #   final_metrics_res_w_aicbic,
     #   paste(
@@ -278,7 +278,7 @@ validAllModel_Cat <- function(cluster_names,
     #     sep = ""
     #   )
     # )
-    
+
   } else{
     final_metrics_res_w_aicbic <-
       final_metrics_res_w_aicbic[, c(
@@ -299,15 +299,15 @@ validAllModel_Cat <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )]
-    
-    
-    
+
+
+
     final_metrics_res_w_aicbic <-
       arrange(final_metrics_res_w_aicbic,
               validation_group,
               #desc(n_classes),
               desc(kappa_mean))
-    
+
     final_metrics_res_w_aicbic <-
       final_metrics_res_w_aicbic[, c(
         "accuracy_mean",
@@ -330,7 +330,7 @@ validAllModel_Cat <- function(cluster_names,
     if (!is.null(kappa_results_threshold_final_metrics)) {
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[final_metrics_res_w_aicbic$kappa_mean > kappa_results_threshold_final_metrics |
                                                                  !final_metrics_res_w_aicbic$validation_group %in% c("validators1"), ]
-      
+
       final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic[paste(final_metrics_res_w_aicbic$n,
                                                                      final_metrics_res_w_aicbic$whichSplit,
                                                                      sep = "") %in%
@@ -339,7 +339,7 @@ validAllModel_Cat <- function(cluster_names,
                                                                        sep = ""), ]
     }
     cluster_namesbu <- cluster_names
-    final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic %>% 
+    final_metrics_res_w_aicbic <- final_metrics_res_w_aicbic %>%
       transmute(model_type = "-",
                 model_spec1 = "-",
                 model_spec2 = "-",
@@ -359,10 +359,10 @@ validAllModel_Cat <- function(cluster_names,
                 AUC = AUC_mean,
                 AUC_SE = AUC_sd
       )
-   
-    
+
+
   }
-  
-  
+
+
   return(final_metrics_res_w_aicbic)
 }

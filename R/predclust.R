@@ -238,38 +238,6 @@ predclust <- function(sync_genclust,
   if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
     stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
   }
-
-
-  label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
-
-  if(!sync_genclust){
-    if(isTRUE(sync_validclust)){
-      if(sjmisc::is_empty(output_path_prefix)) output_path_prefix <- global_parameters_valid[['output_path_prefix']]
-      if(sjmisc::is_empty(data_path)) data_path <- global_parameters_valid[['data_path']]
-      if(sjmisc::is_empty(variable_names)) variable_names <- global_parameters_valid[['variable_names']]
-      if(sjmisc::is_empty(naString)) naString <- global_parameters_valid[['naString']]
-      if(sjmisc::is_empty(cluster_names)) cluster_names <- global_parameters_valid[['cluster_names']]
-    }
-    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(cluster_names %in% reference), sep = "")
-    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(cluster_names %in% comparison), sep = "")
-  }
-
-  if(customized){
-    if_PCD <- FALSE
-    label_category1 <- reference
-    comparison <- paste(comparison, collapse=",")
-  }
-  ####################################################################
-  ###########construct validators by provided arguments###############
-  ####################################################################
-  # predictors_names <- gsub(","," ",predictors_names)
-  # predictors_names <- trimws(predictors_names)
-  # predictors_names <- strsplit(predictors_names," |\t|\n|\f|\v|\r")[[1]]
-  # predictors_names <- predictors_names[predictors_names!=""]
-  print("predictors_names is: ")
-  print(seed_numbers['seed_num_split'])
-  print(predictors_names)
-  label_category1 <- paste(label_category1, collapse=",")
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
   kappa_results_threshold_final_metrics <- 0.005
@@ -278,46 +246,66 @@ predclust <- function(sync_genclust,
   pcd_dropping_pct <- c(0.1,0.1,1)
   seed_num <- seed_numbers
   seed_num['seed_num_PCD'] <- seed_num['seed_num_pcd']
-  if(tolower(trimws(cluster_label_position)) == "predicted"){
-    validators <- list(validator(
-                                predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
-                                predicted_cluster_n = cluster_names,
-                                validator_source_variables = predictors_names,
-                                listwise_deletion_variables = listwise_deletion_variables,
-                                validator_type = "direct",
-                                seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
-                                             seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
-                                             seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
-                                supervised_model = supervised_method,
-                                alpha = glmnet_specs['alpha'],
-                                lambda = glmnet_specs['lambda'],
-                                validator_source_all_missing = outcome_obs$outcome_source_all_missing))
-    print("validator is")
-    print(validators)
-  }else if(tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
-    {
-    validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
-                                 validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
-                                 validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
-                                 predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
-                                 predicted_cluster_n = cluster_names,
-                                 validator_source_variables = outcome_obs$outcome_source_variables,
-                                 listwise_deletion_variables = listwise_deletion_variables,
-                                 validator_type = "flip",
-                                 flip_outcome_type = tolower(trimws(outcome_obs$outcome_type)),
-                                 flipped_predictors_variables = predictors_names,
-                                 flipped_predictors_cluster = ifelse(cluster_label_position == "predictor",TRUE,FALSE),
-                                 flipped_predictors_pp = FALSE,
-                                 seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
-                                              seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
-                                              seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
-                                 supervised_model = supervised_method,
-                                 alpha = glmnet_specs['alpha'],
-                                 lambda = glmnet_specs['lambda'],
-                                 validator_source_all_missing = outcome_obs$outcome_source_all_missing))
-  }
 
   if(isTRUE(sync_genclust)){
+
+    label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
+    if(customized){
+      if_PCD <- FALSE
+      label_category1 <- reference
+      comparison <- paste(comparison, collapse=",")
+    }
+    label_category1 <- paste(label_category1, collapse=",")
+    ####################################################################
+    ###########construct validators by provided arguments###############
+    ####################################################################
+    # predictors_names <- gsub(","," ",predictors_names)
+    # predictors_names <- trimws(predictors_names)
+    # predictors_names <- strsplit(predictors_names," |\t|\n|\f|\v|\r")[[1]]
+    # predictors_names <- predictors_names[predictors_names!=""]
+    # print("predictors_names is: ")
+    # print(seed_numbers['seed_num_split'])
+    # print(predictors_names)
+
+    if(tolower(trimws(cluster_label_position)) == "predicted"){
+      validators <- list(validator(
+        predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+        predicted_cluster_n = cluster_names,
+        validator_source_variables = predictors_names,
+        listwise_deletion_variables = listwise_deletion_variables,
+        validator_type = "direct",
+        seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                     seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                     seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
+        supervised_model = supervised_method,
+        alpha = glmnet_specs['alpha'],
+        lambda = glmnet_specs['lambda'],
+        validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+      print("validator is")
+      print(validators)
+    }else if(tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
+    {
+      validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
+                                   validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
+                                   validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
+                                   predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+                                   predicted_cluster_n = cluster_names,
+                                   validator_source_variables = outcome_obs$outcome_source_variables,
+                                   listwise_deletion_variables = listwise_deletion_variables,
+                                   validator_type = "flip",
+                                   flip_outcome_type = tolower(trimws(outcome_obs$outcome_type)),
+                                   flipped_predictors_variables = predictors_names,
+                                   flipped_predictors_cluster = ifelse(cluster_label_position == "predictor",TRUE,FALSE),
+                                   flipped_predictors_pp = FALSE,
+                                   seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                                                seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                                                seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
+                                   supervised_model = supervised_method,
+                                   alpha = glmnet_specs['alpha'],
+                                   lambda = glmnet_specs['lambda'],
+                                   validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+    }
+
     #folder_path = '/Users/zetanli/Desktop/myproject roc max predicted_cluster /testdiffseed_gmm_runif_validclust/gmm/cP3/',
     folder_path <- global_parameters$folder_path
     listwise_deletion_variables <- global_parameters$listwise_deletion_variables
@@ -631,6 +619,64 @@ predclust <- function(sync_genclust,
                                  x_names = variable_names,
                                  naString = naString)
     print("end input_dt")
+    if(length(cluster_names) == 1){
+      clust_multi <- sjmisc::to_dummy(input_dt[,cluster_names])
+      names(clust_multi) <- paste("P", 1:ncol(clust_multi), sep="")
+      input_dt[,names(clust_multi)] <- clust_multi
+      cluster_names <- names(clust_multi)
+    }
+
+    label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
+    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(cluster_names %in% reference), sep = "")
+    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(cluster_names %in% comparison), sep = "")
+
+    if(customized){
+      if_PCD <- FALSE
+      label_category1 <- reference
+      comparison <- paste(comparison, collapse=",")
+    }
+    label_category1 <- paste(label_category1, collapse=",")
+
+    if(tolower(trimws(cluster_label_position)) == "predicted"){
+      validators <- list(validator(
+        predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+        predicted_cluster_n = cluster_names,
+        validator_source_variables = predictors_names,
+        listwise_deletion_variables = listwise_deletion_variables,
+        validator_type = "direct",
+        seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                     seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                     seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
+        supervised_model = supervised_method,
+        alpha = glmnet_specs['alpha'],
+        lambda = glmnet_specs['lambda'],
+        validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+      print("validator is")
+      print(validators)
+    }else if(tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
+    {
+      validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
+                                   validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
+                                   validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
+                                   predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+                                   predicted_cluster_n = cluster_names,
+                                   validator_source_variables = outcome_obs$outcome_source_variables,
+                                   listwise_deletion_variables = listwise_deletion_variables,
+                                   validator_type = "flip",
+                                   flip_outcome_type = tolower(trimws(outcome_obs$outcome_type)),
+                                   flipped_predictors_variables = predictors_names,
+                                   flipped_predictors_cluster = ifelse(cluster_label_position == "predictor",TRUE,FALSE),
+                                   flipped_predictors_pp = FALSE,
+                                   seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                                                seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                                                seed_num_supervised_model = as.integer(seed_numbers['seed_num_supervised_model'])),
+                                   supervised_model = supervised_method,
+                                   alpha = glmnet_specs['alpha'],
+                                   lambda = glmnet_specs['lambda'],
+                                   validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+    }
+
+
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
@@ -659,7 +705,7 @@ predclust <- function(sync_genclust,
                                 if_listwise_deletion,
                                 y_names,
                                 lr_maxiter,
-                                kappa_results_threshold_final_metrics = 0.05,
+                                kappa_results_threshold_final_metrics,
                                 optimize_prob_thresh = 0.5,
                                 pcd_dropping_pct,
                                 if_CV,
@@ -732,7 +778,7 @@ predclust <- function(sync_genclust,
                              if_listwise_deletion,
                              y_names,
                              lr_maxiter,
-                             kappa_results_threshold_final_metrics = 0.05,
+                             kappa_results_threshold_final_metrics,
                              combined_posterior_prob_threshold,
                              optimize_prob_thresh = 0.5,
                              pcd_dropping_pct,
@@ -769,7 +815,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
                       Cluster_names = paste(cluster_names,collapse = ""),
-                      Label_category1 = label_group1,
+                      Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                       kappa_train = kappa_mean_cv,
@@ -809,7 +855,7 @@ predclust <- function(sync_genclust,
                                if_listwise_deletion,
                                y_names,
                                lr_maxiter,
-                               kappa_results_threshold_final_metrics = 0.05,
+                               kappa_results_threshold_final_metrics,
                                optimize_prob_thresh = 0.5,
                                pcd_dropping_pct,
                                if_CV,
@@ -844,7 +890,7 @@ predclust <- function(sync_genclust,
                     Supervised_spec3 = "-",
                     Cluster_n = length(cluster_names),
                     Cluster_names = paste(cluster_names,collapse = ""),
-                    Label_category1 = label_group1,
+                    Label_category1 = combination_of_class_probabilities,
                     Label_position = cluster_label_position,
                     Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
                     kappa_train = kappa_mean_cv,

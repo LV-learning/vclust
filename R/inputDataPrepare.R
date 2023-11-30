@@ -4,6 +4,8 @@ inputDataPrepare <- function(data_path,
   if(is.null(naString)){
     naString <- c("*","9999","NA","<NA>")
   }
+  print('#######naString is################')
+  print(naString)
   dt <- as.data.frame(read.csv(data_path,header = FALSE, stringsAsFactors = FALSE,na.strings = naString))
   dt_types <- all(sapply(dt,typeof) == "character")
   if(dt_types){

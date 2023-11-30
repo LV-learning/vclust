@@ -73,7 +73,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
                                    "comb",
                                    label_category1i,
                                    sep='')
-          if(label_categoryi %in% names(tmp_list)){
+          if(label_category1i %in% names(tmp_list)){
             dt_comb[[j]] <- tmp_list[,label_category1i,drop=FALSE]
             j <- j + 1
           }

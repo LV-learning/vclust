@@ -212,21 +212,6 @@ validclust <- function(sync_genclust,
   if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
   if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
   label_category1 <- NULL
-  if(!sync_genclust){
-    class_range <- length(info_genclust[['cluster_names']])
-    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(info_genclust[['cluster_names']] %in% reference), sep = "")
-    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(info_genclust[['cluster_names']] %in% comparison), sep = "")
-  }
-  if(customized){
-    if(sjmisc::is_empty(comparison)){
-      all_clusters <- paste("P",1:class_range, sep="")
-      comparison <- all_clusters[!all_clusters %in% reference]
-    }else{
-      comparison <- paste(comparison, collapse=",")
-    }
-    reference <- paste(reference, collapse=",")
-    label_category1 <- c(reference,comparison)
-  }
   repeated_CV = 1
   if_PCD <- FALSE
   kappa_filter_threshold <- kappa_filter_maxN
@@ -242,6 +227,16 @@ validclust <- function(sync_genclust,
   }
 
   if(isTRUE(sync_genclust)){
+    if(customized){
+      if(sjmisc::is_empty(comparison)){
+        all_clusters <- paste("P",1:class_range, sep="")
+        comparison <- all_clusters[!all_clusters %in% reference]
+      }else{
+        comparison <- paste(comparison, collapse=",")
+      }
+      reference <- paste(reference, collapse=",")
+      label_category1 <- c(reference,comparison)
+    }
     class_range <- max(global_parameters$class_range[1],class_range[1]):min(global_parameters$class_range[length(global_parameters$class_range)],class_range[length(class_range)])
     #folder_path = '/Users/zetanli/Desktop/myproject roc max predicted_cluster /testdiffseed_gmm_runif_validclust/gmm/cP3/',
     folder_path <- global_parameters$folder_path
@@ -539,17 +534,44 @@ validclust <- function(sync_genclust,
       res
     }
   }else{
-    global_parameters_valid$output_path_prefix <<- info_genclust[['output_path_prefix']]
-    global_parameters_valid$data_path <<- info_genclust[['data_path']]
-    global_parameters_valid$variable_names <<- info_genclust[['variable_names']]
-    global_parameters_valid$naString <<- info_genclust[['naString']]
+
     global_parameters_valid$cluster_names <<- info_genclust[['cluster_names']]
-    output_path_prefix <- info_genclust[['output_path_prefix']]
     print("start input_dt")
     input_dt <- inputDataPrepare(data_path = info_genclust[['data_path']],
                                  x_names = info_genclust[['variable_names']],
                                  naString = info_genclust[['naString']])
     print("end input_dt")
+
+    if(length(info_genclust[['cluster_names']]) == 1){
+      clust_multi <- sjmisc::to_dummy(input_dt[,info_genclust[['cluster_names']]])
+      names(clust_multi) <- paste("P", 1:ncol(clust_multi), sep="")
+      input_dt[,names(clust_multi)] <- clust_multi
+      info_genclust[['cluster_names']] <- names(clust_multi)
+    }
+
+    class_range <- length(info_genclust[['cluster_names']])
+    if(!sjmisc::is_empty(reference)) reference <- paste("P", which(info_genclust[['cluster_names']] %in% reference), sep = "")
+    if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(info_genclust[['cluster_names']] %in% comparison), sep = "")
+
+    if(customized){
+      if(sjmisc::is_empty(comparison)){
+        all_clusters <- paste("P",1:class_range, sep="")
+        comparison <- all_clusters[!all_clusters %in% reference]
+      }else{
+        comparison <- paste(comparison, collapse=",")
+      }
+      reference <- paste(reference, collapse=",")
+      label_category1 <- c(reference,comparison)
+    }
+
+    global_parameters_valid$output_path_prefix <<- info_genclust[['output_path_prefix']]
+    global_parameters_valid$data_path <<- info_genclust[['data_path']]
+    global_parameters_valid$variable_names <<- info_genclust[['variable_names']]
+    global_parameters_valid$naString <<- info_genclust[['naString']]
+
+    output_path_prefix <- info_genclust[['output_path_prefix']]
+
+
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
