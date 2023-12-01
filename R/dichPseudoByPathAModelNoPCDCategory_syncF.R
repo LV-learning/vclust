@@ -61,7 +61,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
     dt_comb <- list()
     j <- 1
     for(i in 1:(n-1)){
-      tmp_list <- chooseMClassFromNOpt(class_cols_dt=dt_rmna[,c((ncol(dt_rmna)-2),(ncol(dt_rmna) - 1),ncol(dt_rmna))],m=i,n=n)
+      tmp_list <- chooseMClassFromNOpt(class_cols_dt=dt_rmna[,c((ncol(dt_rmna)-n+1):ncol(dt_rmna))],m=i,n=n)
       if(!is.null(label_category1)){
         for(label_category1i in label_category1){
           label_category1i <- toupper(stringr::str_extract(gsub(" |,","",label_category1i),'([pP][1234567890]+)+'))
