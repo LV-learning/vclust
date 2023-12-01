@@ -235,6 +235,7 @@ predclust <- function(sync_genclust,
                       customized = F,
                       reference = NULL,
                       comparison = NULL){ #
+  base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
     stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
   }

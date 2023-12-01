@@ -208,6 +208,7 @@ validclust <- function(sync_genclust,
                        reference = NULL,
                        comparison = NULL
 ){
+  base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
   if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
   if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
