@@ -124,7 +124,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
                   pcd_dropping_pct = pcd_dropping_pct
                 )
             }
-            if(attr(validators[[v_id]],"class") %in% c("validator_direct","validator_flip") &
+            if(attr(validators[[v_id]],"class") %in% c("validator_direct","validator_flip","validator_continuous") &
                names(mComb)[aChoiceProb] %in% validators[[v_id]]$predicted_cluster_combination &
                n %in% validators[[v_id]]$predicted_cluster_n){
               dt_y_test_tmp <- m_res[[3]]
@@ -132,11 +132,19 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
               dt_y_test_tmp$validation_group <- validators_name[v_id]
               dt_y_test <- rbind(dt_y_test, dt_y_test_tmp)
             }
-            roc_tmp <- m_res[[2]]
+
+            tryCatch({
+              roc_tmp <- m_res[[2]]
+              roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              roc_tmp$validation_group <- validators_name[v_id]
+              roc_res <- rbind(roc_res, roc_tmp)
+            },
+            error = function(e){
+              message("no roc for continuous outcome")
+            })
+
+
             m_res <- m_res[[1]]
-            roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
-            roc_tmp$validation_group <- validators_name[v_id]
-            roc_res <- rbind(roc_res, roc_tmp)
             m_res <- as.data.frame(t(m_res))
             m_res$whichSplit <- names(mComb)[aChoiceProb]
             final_metrics <- rbind(final_metrics, m_res)
@@ -187,11 +195,17 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
                   pcd_dropping_pct = pcd_dropping_pct
                 )
             }
-            roc_tmp <- m_res[[2]]
+
+            tryCatch({
+              roc_tmp <- m_res[[2]]
+              roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              roc_tmp$validation_group <- validators_name[v_id]
+              roc_res <- rbind(roc_res, roc_tmp)
+            },
+            error = function(e){
+              message("no roc for continuous outcome")
+            })
             m_res <- m_res[[1]]
-            roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
-            roc_tmp$validation_group <- validators_name[v_id]
-            roc_res <- rbind(roc_res, roc_tmp)
             m_res <- as.data.frame(t(m_res))
             m_res$whichSplit <- names(mComb)[aChoiceProb]
             final_metrics <- rbind(final_metrics, m_res)

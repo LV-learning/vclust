@@ -15,7 +15,8 @@ new_validator <- function(thresholds,
                           alpha,
                           lambda,
                           seed_num,
-                          validator_source_all_missing){
+                          validator_source_all_missing,
+                          contVarName){
   if(!sjmisc::is_empty(flip_outcome_type)) stopifnot(is.character(flip_outcome_type) && identical(length(flip_outcome_type), 1L))
   stopifnot(is.character(validator_variables))
   stopifnot(is.character(validator_type))
@@ -46,6 +47,7 @@ new_validator <- function(thresholds,
                  alpha = alpha,
                  lambda = lambda,
                  seed_num = seed_num,
-                 validator_source_all_missing = validator_source_all_missing),
+                 validator_source_all_missing = validator_source_all_missing,
+                 contVarName = contVarName),
             class = class_type)
 }

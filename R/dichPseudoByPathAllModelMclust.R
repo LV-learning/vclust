@@ -145,7 +145,7 @@ dichPseudoByPathAllModelMclust <- function(folder_path,
           )
 
           res_n_tmp <- res_n[["dt_y_test"]]
-          res_n_tmp %>%
+          res_n_tmp <- res_n_tmp %>%
             group_by(validation_group,whichSplit,original_id) %>%
             summarise(y=if_else(sum(y) >= (r_pseudo/2),1,0),predicted_y=if_else(sum(predicted_y) >= (r_pseudo/2),1,0))
           write.csv(

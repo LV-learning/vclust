@@ -17,3 +17,13 @@ predictors.validator_flip <- function(validator){
   }
   paste(predictor_part,collapse = "+")
 }
+predictors.validator_continuous <- function(validator){
+  predictor_part <- validator$flipped_predictors_variables
+  if(validator$flipped_predictors_cluster == TRUE){
+    predictor_part <- c(predictor_part,"cluster")
+  }
+  if(validator$flipped_predictors_pp == TRUE){
+    predictor_part <- c(predictor_part,paste("P",1:validator$n,sep = ""))
+  }
+  paste(predictor_part,collapse = "+")
+}

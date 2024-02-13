@@ -234,7 +234,8 @@ predclust <- function(sync_genclust,
                       lr_maxiter,
                       customized = F,
                       reference = NULL,
-                      comparison = NULL){ #
+                      comparison = NULL,
+                      if_continuous = F){ #
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
@@ -269,7 +270,7 @@ predclust <- function(sync_genclust,
     # print(seed_numbers['seed_num_split'])
     # print(predictors_names)
 
-    if(tolower(trimws(cluster_label_position)) == "predicted"){
+    if(if_continuous == FALSE & tolower(trimws(cluster_label_position)) == "predicted"){
       validators <- list(validator(
         predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
         predicted_cluster_n = cluster_names,
@@ -285,7 +286,7 @@ predclust <- function(sync_genclust,
         validator_source_all_missing = outcome_obs$outcome_source_all_missing))
       print("validator is")
       print(validators)
-    }else if(tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
+    }else if(if_continuous == FALSE & tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
     {
       validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
                                    validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
@@ -306,6 +307,24 @@ predclust <- function(sync_genclust,
                                    alpha = glmnet_specs['alpha'],
                                    lambda = glmnet_specs['lambda'],
                                    validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+    }else if(if_continuous == TRUE & tolower(trimws(cluster_label_position)) %in% c("predictor","none")){
+      validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
+                                   validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
+                                   validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
+                                   predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+                                   predicted_cluster_n = cluster_names,
+                                   validator_source_variables = outcome_obs$outcome_source_variables,
+                                   listwise_deletion_variables = listwise_deletion_variables,
+                                   validator_type = "continuous",
+                                   flipped_predictors_variables = predictors_names,
+                                   flipped_predictors_cluster = ifelse(cluster_label_position == "predictor",TRUE,FALSE),
+                                   flipped_predictors_pp = FALSE,
+                                   seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                                                seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                                                seed_num_regression_model = as.integer(seed_numbers['seed_num_regression_model'])),
+                                   supervised_model = supervised_method,
+                                   validator_source_all_missing = outcome_obs$outcome_source_all_missing,
+                                   contVarName = outcome_obs$outcome_continuous))
     }
 
     #folder_path = '/Users/zetanli/Desktop/myproject roc max predicted_cluster /testdiffseed_gmm_runif_validclust/gmm/cP3/',
@@ -401,145 +420,370 @@ predclust <- function(sync_genclust,
     }
     if(if_PCD == TRUE){
       if(tolower(model_type) %in% c("gmm","growth mixture model")){
-        res <- dichPseudoByPathAllModel(folder_path,
-                                        n_range = length(cluster_names):length(cluster_names),
-                                        r_pseudo = r_PCD,
-                                       K_fold,
-                                       repeated_folds_R = repeated_CV,
-                                       input_dt,
-                                       x_names,
-                                       validators,
-                                       seed_num,
-                                       output_path_prefix,
-                                       validation_data_fraction = train_fraction,
-                                       kappa_filter_threshold,
-                                       if_listwise_deletion,
-                                       y_names,
-                                       lr_maxiter,
-                                       kappa_results_threshold,
-                                       kappa_results_threshold_final_metrics,
-                                       optimize_prob_thresh = 0.5,
-                                       pcd_dropping_pct,
-                                       if_CV,
-                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
-      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
+        if(if_continuous){
+          res <- dichPseudoByPathAllModel_Cont(folder_path,
+                                                    n_range = length(cluster_names):length(cluster_names),
+                                                    r_pseudo = r_PCD,
+                                                    K_fold,
+                                                    repeated_folds_R = repeated_CV,
+                                                    input_dt,
+                                                    x_names,
+                                                    validators,
+                                                    seed_num,
+                                                    output_path_prefix,
+                                                    validation_data_fraction = train_fraction,
+                                                    kappa_filter_threshold,
+                                                    if_listwise_deletion,
+                                                    y_names,
+                                                    lr_maxiter,
+                                                    kappa_results_threshold,
+                                                    kappa_results_threshold_final_metrics,
+                                                    optimize_prob_thresh = 0.5,
+                                                    pcd_dropping_pct,
+                                                    if_CV,
+                                                    label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
 
-        res <- dichPseudoByPathAllModelMclust(folder_path,
-                                                   ##model classes
-                                                   n_range = length(cluster_names):length(cluster_names),
-                                                   r_pseudo = r_PCD,
-                                                   K_fold,
-                                                   repeated_folds_R = repeated_CV,
-                                                   input_dt,
-                                                   x_names,
-                                                   validators,
-                                                   seed_num,
-                                                   output_path_prefix,
-                                                   validation_data_fraction = train_fraction,
-                                                   kappa_filter_threshold,
-                                                   if_listwise_deletion,
-                                                   y_names,
-                                                   lr_maxiter,
-                                                   kappa_results_threshold,
-                                                   kappa_results_threshold_final_metrics,
-                                                   optimize_prob_thresh = 0.5,
-                                                   pcd_dropping_pct,
-                                                   if_CV,
-                                                   label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }else{
+          res <- dichPseudoByPathAllModel(folder_path,
+                                          n_range = length(cluster_names):length(cluster_names),
+                                          r_pseudo = r_PCD,
+                                          K_fold,
+                                          repeated_folds_R = repeated_CV,
+                                          input_dt,
+                                          x_names,
+                                          validators,
+                                          seed_num,
+                                          output_path_prefix,
+                                          validation_data_fraction = train_fraction,
+                                          kappa_filter_threshold,
+                                          if_listwise_deletion,
+                                          y_names,
+                                          lr_maxiter,
+                                          kappa_results_threshold,
+                                          kappa_results_threshold_final_metrics,
+                                          optimize_prob_thresh = 0.5,
+                                          pcd_dropping_pct,
+                                          if_CV,
+                                          label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }
+
+      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
+        if(if_continuous){
+          res <- dichPseudoByPathAllModel_Cont(folder_path,
+                                                    ##model classes
+                                                    n_range = length(cluster_names):length(cluster_names),
+                                                    r_pseudo = r_PCD,
+                                                    K_fold,
+                                                    repeated_folds_R = repeated_CV,
+                                                    input_dt,
+                                                    x_names,
+                                                    validators,
+                                                    seed_num,
+                                                    output_path_prefix,
+                                                    validation_data_fraction = train_fraction,
+                                                    kappa_filter_threshold,
+                                                    if_listwise_deletion,
+                                                    y_names,
+                                                    lr_maxiter,
+                                                    kappa_results_threshold,
+                                                    kappa_results_threshold_final_metrics,
+                                                    optimize_prob_thresh = 0.5,
+                                                    pcd_dropping_pct,
+                                                    if_CV,
+                                                    label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+
+        }else{
+          res <- dichPseudoByPathAllModelMclust(folder_path,
+                                                ##model classes
+                                                n_range = length(cluster_names):length(cluster_names),
+                                                r_pseudo = r_PCD,
+                                                K_fold,
+                                                repeated_folds_R = repeated_CV,
+                                                input_dt,
+                                                x_names,
+                                                validators,
+                                                seed_num,
+                                                output_path_prefix,
+                                                validation_data_fraction = train_fraction,
+                                                kappa_filter_threshold,
+                                                if_listwise_deletion,
+                                                y_names,
+                                                lr_maxiter,
+                                                kappa_results_threshold,
+                                                kappa_results_threshold_final_metrics,
+                                                optimize_prob_thresh = 0.5,
+                                                pcd_dropping_pct,
+                                                if_CV,
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }
+
 
       }
     }else
       {
       if(tolower(model_type) %in% c("gmm","growth mixture model")){
-        res <- dichPseudoByPathAllModelNoPCD(folder_path,
-                                             ##model classes
-                                             n_range = length(cluster_names):length(cluster_names),
-                                             K_fold,
-                                             repeated_folds_R = repeated_CV,
-                                             input_dt,
-                                             x_names,
-                                             validators,
-                                             seed_num,
-                                             output_path_prefix,
-                                             validation_data_fraction = train_fraction,
-                                             kappa_filter_threshold,
-                                             if_listwise_deletion,
-                                             y_names,
-                                             lr_maxiter,
-                                             kappa_results_threshold,
-                                             kappa_results_threshold_final_metrics,
-                                             combined_posterior_prob_threshold,
-                                             optimize_prob_thresh = 0.5,
-                                             pcd_dropping_pct,
-                                             if_CV,
-                                             label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                             customized = customized)
-      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
+        if(if_continuous){
+          res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
+                                               ##model classes
+                                               n_range = length(cluster_names):length(cluster_names),
+                                               K_fold,
+                                               repeated_folds_R = repeated_CV,
+                                               input_dt,
+                                               x_names,
+                                               validators,
+                                               seed_num,
+                                               output_path_prefix,
+                                               validation_data_fraction = train_fraction,
+                                               kappa_filter_threshold,
+                                               if_listwise_deletion,
+                                               y_names,
+                                               lr_maxiter,
+                                               kappa_results_threshold,
+                                               kappa_results_threshold_final_metrics,
+                                               combined_posterior_prob_threshold,
+                                               optimize_prob_thresh = 0.5,
+                                               pcd_dropping_pct,
+                                               if_CV,
+                                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                               customized = customized)
 
-        res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
-                                                   ##model classes
-                                                   n_range = length(cluster_names):length(cluster_names),
-                                                   K_fold,
-                                                   repeated_folds_R = repeated_CV,
-                                                   input_dt,
-                                                   x_names,
-                                                   validators,
-                                                   seed_num,
-                                                   output_path_prefix,
-                                                   validation_data_fraction = train_fraction,
-                                                   kappa_filter_threshold,
-                                                   if_listwise_deletion,
-                                                   y_names,
-                                                   lr_maxiter,
-                                                   kappa_results_threshold,
-                                                   kappa_results_threshold_final_metrics,
-                                                   combined_posterior_prob_threshold,
-                                                   optimize_prob_thresh = 0.5,
-                                                   pcd_dropping_pct,
-                                                   if_CV,
-                                                   label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                                   customized = customized)
+        }else{
+          res <- dichPseudoByPathAllModelNoPCD(folder_path,
+                                               ##model classes
+                                               n_range = length(cluster_names):length(cluster_names),
+                                               K_fold,
+                                               repeated_folds_R = repeated_CV,
+                                               input_dt,
+                                               x_names,
+                                               validators,
+                                               seed_num,
+                                               output_path_prefix,
+                                               validation_data_fraction = train_fraction,
+                                               kappa_filter_threshold,
+                                               if_listwise_deletion,
+                                               y_names,
+                                               lr_maxiter,
+                                               kappa_results_threshold,
+                                               kappa_results_threshold_final_metrics,
+                                               combined_posterior_prob_threshold,
+                                               optimize_prob_thresh = 0.5,
+                                               pcd_dropping_pct,
+                                               if_CV,
+                                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                               customized = customized)
+        }
+
+      }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
+        if(if_continuous){
+          res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
+                                                    ##model classes
+                                                    n_range = length(cluster_names):length(cluster_names),
+                                                    K_fold,
+                                                    repeated_folds_R = repeated_CV,
+                                                    input_dt,
+                                                    x_names,
+                                                    validators,
+                                                    seed_num,
+                                                    output_path_prefix,
+                                                    validation_data_fraction = train_fraction,
+                                                    kappa_filter_threshold,
+                                                    if_listwise_deletion,
+                                                    y_names,
+                                                    lr_maxiter,
+                                                    kappa_results_threshold,
+                                                    kappa_results_threshold_final_metrics,
+                                                    combined_posterior_prob_threshold,
+                                                    optimize_prob_thresh = 0.5,
+                                                    pcd_dropping_pct,
+                                                    if_CV,
+                                                    label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                    customized = customized)
+
+        }else{
+          res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
+                                                     ##model classes
+                                                     n_range = length(cluster_names):length(cluster_names),
+                                                     K_fold,
+                                                     repeated_folds_R = repeated_CV,
+                                                     input_dt,
+                                                     x_names,
+                                                     validators,
+                                                     seed_num,
+                                                     output_path_prefix,
+                                                     validation_data_fraction = train_fraction,
+                                                     kappa_filter_threshold,
+                                                     if_listwise_deletion,
+                                                     y_names,
+                                                     lr_maxiter,
+                                                     kappa_results_threshold,
+                                                     kappa_results_threshold_final_metrics,
+                                                     combined_posterior_prob_threshold,
+                                                     optimize_prob_thresh = 0.5,
+                                                     pcd_dropping_pct,
+                                                     if_CV,
+                                                     label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                     customized = customized)
+        }
+
 
       }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means")){
-        res <- dichPseudoByPathAllModelKmeans(folder_path,
-                                              ##model classes
-                                              n_range = length(cluster_names):length(cluster_names),
-                                              K_fold,
-                                              repeated_folds_R = repeated_CV,
-                                              input_dt,
-                                              x_names = variable_names,
-                                              validators,
-                                              seed_num,
-                                              output_path_prefix,
-                                              validation_data_fraction = train_fraction,
-                                              kappa_filter_threshold,
-                                              if_listwise_deletion,
-                                              y_names,
-                                              lr_maxiter,
-                                              kappa_results_threshold,
-                                              kappa_results_threshold_final_metrics,
-                                              optimize_prob_thresh,
-                                              pcd_dropping_pct,
-                                              if_CV,
-                                              label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        if(if_continuous){
+          res <- dichPseudoByPathAllModelKmeans_Cont(folder_path,
+                                                ##model classes
+                                                n_range = length(cluster_names):length(cluster_names),
+                                                K_fold,
+                                                repeated_folds_R = repeated_CV,
+                                                input_dt,
+                                                x_names = variable_names,
+                                                validators,
+                                                seed_num,
+                                                output_path_prefix,
+                                                validation_data_fraction = train_fraction,
+                                                kappa_filter_threshold,
+                                                if_listwise_deletion,
+                                                y_names,
+                                                lr_maxiter,
+                                                kappa_results_threshold,
+                                                kappa_results_threshold_final_metrics,
+                                                optimize_prob_thresh,
+                                                pcd_dropping_pct,
+                                                if_CV,
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }else{
+          res <- dichPseudoByPathAllModelKmeans(folder_path,
+                                                ##model classes
+                                                n_range = length(cluster_names):length(cluster_names),
+                                                K_fold,
+                                                repeated_folds_R = repeated_CV,
+                                                input_dt,
+                                                x_names = variable_names,
+                                                validators,
+                                                seed_num,
+                                                output_path_prefix,
+                                                validation_data_fraction = train_fraction,
+                                                kappa_filter_threshold,
+                                                if_listwise_deletion,
+                                                y_names,
+                                                lr_maxiter,
+                                                kappa_results_threshold,
+                                                kappa_results_threshold_final_metrics,
+                                                optimize_prob_thresh,
+                                                pcd_dropping_pct,
+                                                if_CV,
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }
+
 
       }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group")){
-        res <- dichPseudoByPathAllModelO(folder_path,
-                                         K_fold,
-                                         repeated_folds_R = repeated_CV,
-                                         input_dt,
-                                         x_names = variable_names,
-                                         validators,
-                                         seed_num,
-                                         output_path_prefix,
-                                         validation_data_fraction = train_fraction,
-                                         if_listwise_deletion,
-                                         y_names,
-                                         lr_maxiter,
-                                         pcd_dropping_pct,
-                                         if_CV,
-                                         label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        if(if_continuous){
+          res <- dichPseudoByPathAllModelO_Cont(folder_path,
+                                           K_fold,
+                                           repeated_folds_R = repeated_CV,
+                                           input_dt,
+                                           x_names = variable_names,
+                                           validators,
+                                           seed_num,
+                                           output_path_prefix,
+                                           validation_data_fraction = train_fraction,
+                                           if_listwise_deletion,
+                                           y_names,
+                                           lr_maxiter,
+                                           pcd_dropping_pct,
+                                           if_CV,
+                                           label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+
+        }else{
+          res <- dichPseudoByPathAllModelO(folder_path,
+                                           K_fold,
+                                           repeated_folds_R = repeated_CV,
+                                           input_dt,
+                                           x_names = variable_names,
+                                           validators,
+                                           seed_num,
+                                           output_path_prefix,
+                                           validation_data_fraction = train_fraction,
+                                           if_listwise_deletion,
+                                           y_names,
+                                           lr_maxiter,
+                                           pcd_dropping_pct,
+                                           if_CV,
+                                           label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        }
+
       }
+      }
+
+    if(if_continuous){
+      if(train_fraction == 1){
+        res <- res %>%
+          transmute(Supervised_method = supervised_method,
+                    Supervised_spec1 = "-",
+                    Supervised_spec2 = "-",
+                    Supervised_spec3 = "-",
+                    Cluster_n = length(cluster_names),
+                    Cluster_names = paste(cluster_names,collapse = ""),
+                    Label_category1 = combination_of_class_probabilities,
+                    Label_position = cluster_label_position,
+                    Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                    MSE = MSE,
+                    MSE_SE = MSE_SE,
+                    RMSE = RMSE,
+                    RMSE_SE = RMSE_SE,
+                    MAE = MAE,
+                    MAE_SE = MAE_SE,
+                    R_square = R_square,
+                    R_square_SE = R_square_SE,
+                    adj_R_square = adj_R_square,
+                    adj_R_square_SE = adj_R_square_SE,
+                    AIC = AIC,
+                    AIC_SE = AIC_SE
+          )
+      }else
+      {
+        res <- res %>%
+          transmute(Supervised_method = supervised_method,
+                    Supervised_spec1 = "-",
+                    Supervised_spec2 = "-",
+                    Supervised_spec3 = "-",
+                    Cluster_n = length(cluster_names),
+                    Cluster_names = paste(cluster_names,collapse = ""),
+                    Label_category1 = combination_of_class_probabilities,
+                    Label_position = cluster_label_position,
+                    Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                    MSE_train = MSE_cv,
+                    MSE_test = MSE_test,
+                    MSE_SE_train = MSE_SE_cv,
+                    MSE_SE_test = MSE_SE_test,
+                    RMSE_train = RMSE_cv,
+                    RMSE_test = RMSE_test,
+                    RMSE_SE_test = RMSE_SE_test,
+                    MAE_train = MAE_cv,
+                    MAE_test = MAE_test,
+                    MAE_SE_train = MAE_SE_cv,
+                    MAE_SE_test = MAE_SE_test,
+                    r_square_train = r_square_cv,
+                    r_square_test = r_square_test,
+                    r_square_SE_train = r_square_SE_cv,
+                    r_square_SE_test = r_square_SE_test,
+                    adj_r_square_train = adj_r_square_cv,
+                    adj_r_square_test = adj_r_square_test,
+                    adj_r_square_SE_train = adj_r_square_SE_cv,
+                    adj_r_square_SE_test = adj_r_square_SE_test,
+                    aic_train = aic_cv,
+                    aic_test = aic_test,
+                    aic_SE_train = aic_SE_cv,
+                    aic_SE_test = aic_SE_test
+          )
+      }
+      write.csv(
+        res,
+        paste(
+          output_path_prefix,
+          "predclust_results.csv",
+          sep = ""
+        )
+      )
+      return(res)
     }
     if(train_fraction == 1){
       res <- res %>%
@@ -563,7 +807,8 @@ predclust <- function(sync_genclust,
                   AUC = AUC_mean,
                   AUC_SE = AUC_sd
         )
-    }else{
+    }else
+      {
       res <- res %>%
         transmute(Supervised_method = supervised_method,
                   Supervised_spec1 = "-",
@@ -639,7 +884,7 @@ predclust <- function(sync_genclust,
     }
     label_category1 <- paste(label_category1, collapse=",")
 
-    if(tolower(trimws(cluster_label_position)) == "predicted"){
+    if(if_continuous == FALSE & tolower(trimws(cluster_label_position)) == "predicted"){
       validators <- list(validator(
         predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
         predicted_cluster_n = cluster_names,
@@ -655,7 +900,7 @@ predclust <- function(sync_genclust,
         validator_source_all_missing = outcome_obs$outcome_source_all_missing))
       print("validator is")
       print(validators)
-    }else if(tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
+    }else if(if_continuous == FALSE & tolower(trimws(cluster_label_position)) %in% c("predictor","none"))
     {
       validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
                                    validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
@@ -676,6 +921,25 @@ predclust <- function(sync_genclust,
                                    alpha = glmnet_specs['alpha'],
                                    lambda = glmnet_specs['lambda'],
                                    validator_source_all_missing = outcome_obs$outcome_source_all_missing))
+    }else if(if_continuous == TRUE & tolower(trimws(cluster_label_position)) %in% c("predictor","none")){
+      validators <- list(validator(validator_cutpoint = outcome_obs$outcome_cutpoint,
+                                   validator_cutpoint_sign = outcome_obs$outcome_cutpoint_sign,
+                                   validator_cutpoint_max_min_mean = outcome_obs$outcome_cutpoint_max_min_mean,
+                                   predicted_cluster_combination = if(customized){c(label_category1,comparison)}else{label_category1},
+                                   predicted_cluster_n = cluster_names,
+                                   validator_source_variables = outcome_obs$outcome_source_variables,
+                                   listwise_deletion_variables = listwise_deletion_variables,
+                                   validator_type = "continuous",
+                                   flipped_predictors_variables = predictors_names,
+                                   flipped_predictors_cluster = ifelse(cluster_label_position == "predictor",TRUE,FALSE),
+                                   flipped_predictors_pp = FALSE,
+                                   seed_num = c(seed_num_split = as.integer(seed_numbers['seed_num_split']),
+                                                seed_num_kfold = as.integer(seed_numbers['seed_num_kfold']),
+                                                seed_num_regression_model = as.integer(seed_numbers['seed_num_regression_model'])),
+                                   supervised_model = supervised_method,
+                                   validator_source_all_missing = outcome_obs$outcome_source_all_missing,
+                                   contVarName = outcome_obs$outcome_continuous))
+
     }
 
 
@@ -694,6 +958,96 @@ predclust <- function(sync_genclust,
     print("start to run syncF")
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
+        if(if_continuous){
+          res <- validAllModelPCD_Cont(cluster_names ,
+                                        r_pseudo = r_PCD,
+                                        K_fold,
+                                        repeated_folds_R = repeated_CV,
+                                        input_dt,
+                                        x_names = variable_names,
+                                        validators,
+                                        seed_num,
+                                        output_path_prefix,
+                                        validation_data_fraction = train_fraction,
+                                        if_listwise_deletion,
+                                        y_names,
+                                        lr_maxiter,
+                                        kappa_results_threshold_final_metrics,
+                                        optimize_prob_thresh = 0.5,
+                                        pcd_dropping_pct,
+                                        if_CV,
+                                        label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+          if(train_fraction == 1){
+            res <- res %>%
+              transmute(Supervised_method = supervised_method,
+                        Supervised_spec1 = "-",
+                        Supervised_spec2 = "-",
+                        Supervised_spec3 = "-",
+                        Cluster_n = length(cluster_names),
+                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Label_category1 = combination_of_class_probabilities,
+                        Label_position = cluster_label_position,
+                        Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                        MSE = MSE,
+                        MSE_SE = MSE_SE,
+                        RMSE = RMSE,
+                        RMSE_SE = RMSE_SE,
+                        MAE = MAE,
+                        MAE_SE = MAE_SE,
+                        R_square = R_square,
+                        R_square_SE = R_square_SE,
+                        adj_R_square = adj_R_square,
+                        adj_R_square_SE = adj_R_square_SE,
+                        AIC = AIC,
+                        AIC_SE = AIC_SE
+              )
+          }else
+          {
+            res <- res %>%
+              transmute(Supervised_method = supervised_method,
+                        Supervised_spec1 = "-",
+                        Supervised_spec2 = "-",
+                        Supervised_spec3 = "-",
+                        Cluster_n = length(cluster_names),
+                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Label_category1 = combination_of_class_probabilities,
+                        Label_position = cluster_label_position,
+                        Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                        MSE_train = MSE_cv,
+                        MSE_test = MSE_test,
+                        MSE_SE_train = MSE_SE_cv,
+                        MSE_SE_test = MSE_SE_test,
+                        RMSE_train = RMSE_cv,
+                        RMSE_test = RMSE_test,
+                        RMSE_SE_test = RMSE_SE_test,
+                        MAE_train = MAE_cv,
+                        MAE_test = MAE_test,
+                        MAE_SE_train = MAE_SE_cv,
+                        MAE_SE_test = MAE_SE_test,
+                        r_square_train = r_square_cv,
+                        r_square_test = r_square_test,
+                        r_square_SE_train = r_square_SE_cv,
+                        r_square_SE_test = r_square_SE_test,
+                        adj_r_square_train = adj_r_square_cv,
+                        adj_r_square_test = adj_r_square_test,
+                        adj_r_square_SE_train = adj_r_square_SE_cv,
+                        adj_r_square_SE_test = adj_r_square_SE_test,
+                        aic_train = aic_cv,
+                        aic_test = aic_test,
+                        aic_SE_train = aic_SE_cv,
+                        aic_SE_test = aic_SE_test
+              )
+          }
+          write.csv(
+            res,
+            paste(
+              output_path_prefix,
+              "predclust_results.csv",
+              sep = ""
+            )
+          )
+          return(res)
+        }
         res <- validAllModelPCD(cluster_names ,
                                 r_pseudo = r_PCD,
                                 K_fold,
@@ -734,7 +1088,8 @@ predclust <- function(sync_genclust,
                       AUC = AUC_mean,
                       AUC_SE = AUC_sd
             )
-        }else{
+        }else
+          {
           res <- res %>%
             transmute(Supervised_method = supervised_method,
                       Supervised_spec1 = "-",
@@ -767,7 +1122,99 @@ predclust <- function(sync_genclust,
                       AUC_SE_test = AUC_sd_test
             )
         }
-      }else{
+      }else
+        {
+        if(if_continuous){
+          res <- validAllModel_Cont(cluster_names,
+                                     K_fold,
+                                     repeated_folds_R = repeated_CV,
+                                     input_dt,
+                                     x_names = variable_names,
+                                     validators,
+                                     seed_num,
+                                     output_path_prefix,
+                                     validation_data_fraction = train_fraction,
+                                     if_listwise_deletion,
+                                     y_names,
+                                     lr_maxiter,
+                                     kappa_results_threshold_final_metrics,
+                                     combined_posterior_prob_threshold,
+                                     optimize_prob_thresh = 0.5,
+                                     pcd_dropping_pct,
+                                     if_CV,
+                                     label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                     customized = customized)
+          if(train_fraction == 1){
+            res <- res %>%
+              transmute(Supervised_method = supervised_method,
+                        Supervised_spec1 = "-",
+                        Supervised_spec2 = "-",
+                        Supervised_spec3 = "-",
+                        Cluster_n = length(cluster_names),
+                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Label_category1 = label_group1,
+                        Label_position = cluster_label_position,
+                        Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                        MSE = MSE,
+                        MSE_SE = MSE_SE,
+                        RMSE = RMSE,
+                        RMSE_SE = RMSE_SE,
+                        MAE = MAE,
+                        MAE_SE = MAE_SE,
+                        R_square = R_square,
+                        R_square_SE = R_square_SE,
+                        adj_R_square = adj_R_square,
+                        adj_R_square_SE = adj_R_square_SE,
+                        AIC = AIC,
+                        AIC_SE = AIC_SE
+              )
+          }else
+            {
+            res <- res %>%
+              transmute(Supervised_method = supervised_method,
+                        Supervised_spec1 = "-",
+                        Supervised_spec2 = "-",
+                        Supervised_spec3 = "-",
+                        Cluster_n = length(cluster_names),
+                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Label_category1 = combination_of_class_probabilities,
+                        Label_position = cluster_label_position,
+                        Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                        MSE_train = MSE_cv,
+                        MSE_test = MSE_test,
+                        MSE_SE_train = MSE_SE_cv,
+                        MSE_SE_test = MSE_SE_test,
+                        RMSE_train = RMSE_cv,
+                        RMSE_test = RMSE_test,
+                        RMSE_SE_test = RMSE_SE_test,
+                        MAE_train = MAE_cv,
+                        MAE_test = MAE_test,
+                        MAE_SE_train = MAE_SE_cv,
+                        MAE_SE_test = MAE_SE_test,
+                        r_square_train = r_square_cv,
+                        r_square_test = r_square_test,
+                        r_square_SE_train = r_square_SE_cv,
+                        r_square_SE_test = r_square_SE_test,
+                        adj_r_square_train = adj_r_square_cv,
+                        adj_r_square_test = adj_r_square_test,
+                        adj_r_square_SE_train = adj_r_square_SE_cv,
+                        adj_r_square_SE_test = adj_r_square_SE_test,
+                        aic_train = aic_cv,
+                        aic_test = aic_test,
+                        aic_SE_train = aic_SE_cv,
+                        aic_SE_test = aic_SE_test
+              )
+          }
+          write.csv(
+            res,
+            paste(
+              output_path_prefix,
+              "predclust_results.csv",
+              sep = ""
+            )
+          )
+          return(res)
+        }
         res <- validAllModel(cluster_names,
                              K_fold,
                              repeated_folds_R = repeated_CV,
@@ -845,6 +1292,94 @@ predclust <- function(sync_genclust,
       }
     }else
     {
+      if(if_continuous){
+        res <- validAllModel_Cat_Cont(cluster_names,
+                                       K_fold,
+                                       repeated_folds_R = repeated_CV,
+                                       input_dt,
+                                       x_names = variable_names,
+                                       validators,
+                                       seed_num,
+                                       output_path_prefix,
+                                       validation_data_fraction = train_fraction,
+                                       if_listwise_deletion,
+                                       y_names,
+                                       lr_maxiter,
+                                       kappa_results_threshold_final_metrics,
+                                       optimize_prob_thresh = 0.5,
+                                       pcd_dropping_pct,
+                                       if_CV,
+                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        if(train_fraction == 1){
+          res <- res %>%
+            transmute(Supervised_method = supervised_method,
+                      Supervised_spec1 = "-",
+                      Supervised_spec2 = "-",
+                      Supervised_spec3 = "-",
+                      Cluster_n = length(cluster_names),
+                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Label_category1 = label_group1,
+                      Label_position = cluster_label_position,
+                      Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                      MSE = MSE,
+                      MSE_SE = MSE_SE,
+                      RMSE = RMSE,
+                      RMSE_SE = RMSE_SE,
+                      MAE = MAE,
+                      MAE_SE = MAE_SE,
+                      R_square = R_square,
+                      R_square_SE = R_square_SE,
+                      adj_R_square = adj_R_square,
+                      adj_R_square_SE = adj_R_square_SE,
+                      AIC = AIC,
+                      AIC_SE = AIC_SE
+            )
+        }else{
+          res <- res %>%
+            transmute(Supervised_method = supervised_method,
+                      Supervised_spec1 = "-",
+                      Supervised_spec2 = "-",
+                      Supervised_spec3 = "-",
+                      Cluster_n = length(cluster_names),
+                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Label_category1 = combination_of_class_probabilities,
+                      Label_position = cluster_label_position,
+                      Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
+                      MSE_train = MSE_cv,
+                      MSE_test = MSE_test,
+                      MSE_SE_train = MSE_SE_cv,
+                      MSE_SE_test = MSE_SE_test,
+                      RMSE_train = RMSE_cv,
+                      RMSE_test = RMSE_test,
+                      RMSE_SE_test = RMSE_SE_test,
+                      MAE_train = MAE_cv,
+                      MAE_test = MAE_test,
+                      MAE_SE_train = MAE_SE_cv,
+                      MAE_SE_test = MAE_SE_test,
+                      r_square_train = r_square_cv,
+                      r_square_test = r_square_test,
+                      r_square_SE_train = r_square_SE_cv,
+                      r_square_SE_test = r_square_SE_test,
+                      adj_r_square_train = adj_r_square_cv,
+                      adj_r_square_test = adj_r_square_test,
+                      adj_r_square_SE_train = adj_r_square_SE_cv,
+                      adj_r_square_SE_test = adj_r_square_SE_test,
+                      aic_train = aic_cv,
+                      aic_test = aic_test,
+                      aic_SE_train = aic_SE_cv,
+                      aic_SE_test = aic_SE_test
+            )
+        }
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "predclust_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
       res <- validAllModel_Cat(cluster_names,
                                K_fold,
                                repeated_folds_R = repeated_CV,

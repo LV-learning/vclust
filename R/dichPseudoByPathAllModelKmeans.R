@@ -39,11 +39,11 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
     dir.create(final_roc_res_dir)
   }
 
-  # final_predicted_cluster_res_dir <-
-  #   paste(output_path_prefix, "predicted_cluster_results/", sep = "")
-  # if (dir.exists(final_predicted_cluster_res_dir) == FALSE) {
-  #   dir.create(final_predicted_cluster_res_dir)
-  # }
+  final_predicted_cluster_res_dir <-
+   paste(output_path_prefix, "predicted_cluster_results/", sep = "")
+   if (dir.exists(final_predicted_cluster_res_dir) == FALSE) {
+     dir.create(final_predicted_cluster_res_dir)
+  }
 
   final_roc_res <- data.frame()
   ##import input data
@@ -127,19 +127,19 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
           pcd_dropping_pct = pcd_dropping_pct,
           if_CV = if_CV
         )
-        # if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
-        #   write.csv(
-        #     res_n[["dt_y_test"]],
-        #     paste(
-        #       final_predicted_cluster_res_dir,
-        #       n,
-        #       "_classes",
-        #       ".csv",
-        #       sep = ""
-        #     ),
-        #     row.names = FALSE
-        #   )
-        # }
+         if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
+           write.csv(
+             res_n[["dt_y_test"]],
+             paste(
+               final_predicted_cluster_res_dir,
+               n,
+               "_classes",
+               ".csv",
+               sep = ""
+             ),
+             row.names = FALSE
+           )
+         }
 
         metrics <- res_n[["metrics"]]
         metrics$n_classes <- n
@@ -186,19 +186,19 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
         label_category1 = label_category1
       )
 
-      # if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
-      #   write.csv(
-      #     res_n[["dt_y_test"]],
-      #     paste(
-      #       final_predicted_cluster_res_dir,
-      #       n,
-      #       "_classes",
-      #       ".csv",
-      #       sep = ""
-      #     ),
-      #     row.names = FALSE
-      #   )
-      # }
+       if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
+         write.csv(
+           res_n[["dt_y_test"]],
+           paste(
+             final_predicted_cluster_res_dir,
+             n,
+             "_classes",
+             ".csv",
+             sep = ""
+           ),
+           row.names = FALSE
+         )
+       }
       metrics <- res_n[["metrics"]]
       metrics$n_classes <- n
       final_metrics_res <- rbind(final_metrics_res, metrics)

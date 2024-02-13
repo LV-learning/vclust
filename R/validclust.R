@@ -206,7 +206,8 @@ validclust <- function(sync_genclust,
                        validators,
                        customized = F,
                        reference = NULL,
-                       comparison = NULL
+                       comparison = NULL,
+                       if_continuous = F
 ){
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
@@ -326,6 +327,64 @@ validclust <- function(sync_genclust,
       dir.create(final_roc_res_dir)
     }
     if(tolower(model_type) %in% c("gmm","growth mixture model")){
+      if(if_continuous){
+        res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
+                                                   ##model classes
+                                                   n_range = class_range,
+                                                   K_fold,
+                                                   repeated_folds_R = repeated_CV,
+                                                   input_dt,
+                                                   x_names,
+                                                   validators,
+                                                   seed_num,
+                                                   output_path_prefix,
+                                                   validation_data_fraction = train_fraction,
+                                                   kappa_filter_threshold,
+                                                   if_listwise_deletion,
+                                                   y_names,
+                                                   lr_maxiter,
+                                                   kappa_results_threshold,
+                                                   kappa_results_threshold_final_metrics,
+                                                   combined_posterior_prob_threshold,
+                                                   optimize_prob_thresh = 0.5,
+                                                   pcd_dropping_pct,
+                                                   if_CV,
+                                                   label_category1 = label_category1,
+                                                   customized = customized)
+        res <- res %>%
+          transmute(model_type = "GMM",
+                    model_spec1 = global_parameters$GMM_trend,
+                    model_spec2 = ifelse(global_parameters$GMM_random_intercept,"random intercept","-"),
+                    model_spec3 = ifelse(is_covariates,"covariates","-"),
+                    n_clusters = n_classes,
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
+                    label_group1 = combination_of_class_probabilities,
+                    validator = validation_group,
+                    MSE = MSE,
+                    MSE_SE = MSE_SE,
+                    RMSE = RMSE,
+                    RMSE_SE = RMSE_SE,
+                    MAE = MAE,
+                    MAE_SE = MAE_SE,
+                    R_square = R_square,
+                    R_square_SE = R_square_SE,
+                    adj_R_square = adj_R_square,
+                    adj_R_square_SE = adj_R_square_SE,
+                    AIC = AIC,
+                    AIC_SE = AIC_SE
+          )
+
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
+
       res <- dichPseudoByPathAllModelNoPCD(folder_path,
                                            ##model classes
                                            n_range = class_range,
@@ -382,6 +441,63 @@ validclust <- function(sync_genclust,
 
     }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering")){
 
+      if(if_continuous){
+        res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
+                                                  ##model classes
+                                                  n_range = class_range,
+                                                  K_fold,
+                                                  repeated_folds_R = repeated_CV,
+                                                  input_dt,
+                                                  x_names,
+                                                  validators,
+                                                  seed_num,
+                                                  output_path_prefix,
+                                                  validation_data_fraction = train_fraction,
+                                                  kappa_filter_threshold,
+                                                  if_listwise_deletion,
+                                                  y_names,
+                                                  lr_maxiter,
+                                                  kappa_results_threshold,
+                                                  kappa_results_threshold_final_metrics,
+                                                  combined_posterior_prob_threshold,
+                                                  optimize_prob_thresh = 0.5,
+                                                  pcd_dropping_pct,
+                                                  if_CV,
+                                                  label_category1 = label_category1,
+                                                  customized = customized)
+        res <- res %>%
+          transmute(model_type = "MBC",
+                    model_spec1 = global_parameters$MBCtype,
+                    model_spec2 = "-",
+                    model_spec3 = "-",
+                    n_clusters = n_classes,
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
+                    label_group1 = combination_of_class_probabilities,
+                    validator = validation_group,
+                    MSE = MSE,
+                    MSE_SE = MSE_SE,
+                    RMSE = RMSE,
+                    RMSE_SE = RMSE_SE,
+                    MAE = MAE,
+                    MAE_SE = MAE_SE,
+                    R_square = R_square,
+                    R_square_SE = R_square_SE,
+                    adj_R_square = adj_R_square,
+                    adj_R_square_SE = adj_R_square_SE,
+                    AIC = AIC,
+                    AIC_SE = AIC_SE
+          )
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
+
       res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
                                                  ##model classes
                                                  n_range = class_range,
@@ -436,6 +552,61 @@ validclust <- function(sync_genclust,
       res
 
     }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means")){
+      if(if_continuous){
+        res <- dichPseudoByPathAllModelKmeans_Cont(folder_path,
+                                                    ##model classes
+                                                    n_range = class_range,
+                                                    K_fold,
+                                                    repeated_folds_R = repeated_CV,
+                                                    input_dt,
+                                                    x_names = variable_names,
+                                                    validators,
+                                                    seed_num,
+                                                    output_path_prefix,
+                                                    validation_data_fraction = train_fraction,
+                                                    kappa_filter_threshold,
+                                                    if_listwise_deletion,
+                                                    y_names,
+                                                    lr_maxiter,
+                                                    kappa_results_threshold,
+                                                    kappa_results_threshold_final_metrics,
+                                                    optimize_prob_thresh = 0.5,
+                                                    pcd_dropping_pct,
+                                                    if_CV,
+                                                    label_category1)
+        res <- res %>%
+          transmute(model_type = "K-means",
+                    model_spec1 = "-",
+                    model_spec2 = "-",
+                    model_spec3 = "-",
+                    n_clusters = n_classes,
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
+                    label_group1 = combination_of_class_probabilities,
+                    validator = validation_group,
+                    MSE = MSE,
+                    MSE_SE = MSE_SE,
+                    RMSE = RMSE,
+                    RMSE_SE = RMSE_SE,
+                    MAE = MAE,
+                    MAE_SE = MAE_SE,
+                    R_square = R_square,
+                    R_square_SE = R_square_SE,
+                    adj_R_square = adj_R_square,
+                    adj_R_square_SE = adj_R_square_SE,
+                    AIC = AIC,
+                    AIC_SE = AIC_SE
+          )
+
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
       res <- dichPseudoByPathAllModelKmeans(folder_path,
                                             ##model classes
                                             n_range = class_range,
@@ -489,6 +660,55 @@ validclust <- function(sync_genclust,
 
 
     }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group")){
+      if(if_continuous){
+        res <- dichPseudoByPathAllModelO_Cont(folder_path,
+                                               K_fold,
+                                               repeated_folds_R = repeated_CV,
+                                               input_dt,
+                                               x_names = variable_names,
+                                               validators,
+                                               seed_num,
+                                               output_path_prefix,
+                                               validation_data_fraction = train_fraction,
+                                               if_listwise_deletion,
+                                               y_names,
+                                               lr_maxiter,
+                                               pcd_dropping_pct,
+                                               if_CV,
+                                               label_category1)
+        res <- res %>%
+          transmute(model_type = "Ogroup",
+                    model_spec1 = "-",
+                    model_spec2 = "-",
+                    model_spec3 = "-",
+                    n_clusters = n_classes,
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
+                    label_group1 = combination_of_class_probabilities,
+                    validator = validation_group,
+                    MSE = MSE,
+                    MSE_SE = MSE_SE,
+                    RMSE = RMSE,
+                    RMSE_SE = RMSE_SE,
+                    MAE = MAE,
+                    MAE_SE = MAE_SE,
+                    R_square = R_square,
+                    R_square_SE = R_square_SE,
+                    adj_R_square = adj_R_square,
+                    adj_R_square_SE = adj_R_square_SE,
+                    AIC = AIC,
+                    AIC_SE = AIC_SE
+          )
+
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
       res <- dichPseudoByPathAllModelO(folder_path,
                                        K_fold,
                                        repeated_folds_R = repeated_CV,
@@ -588,6 +808,38 @@ validclust <- function(sync_genclust,
     }
     print("start to run syncF")
     if(!all(apply(input_dt[,info_genclust$cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
+      if(if_continuous){
+        res <- validAllModel_Cont(cluster_names = info_genclust[['cluster_names']],
+                             K_fold,
+                             repeated_folds_R = repeated_CV,
+                             input_dt,
+                             x_names = info_genclust[['variable_names']],
+                             validators,
+                             seed_num,
+                             output_path_prefix,
+                             validation_data_fraction = 1,
+                             if_listwise_deletion,
+                             y_names,
+                             lr_maxiter,
+                             kappa_results_threshold_final_metrics = kappa_results_threshold_final_metrics,
+                             combined_posterior_prob_threshold,
+                             optimize_prob_thresh = 0.5,
+                             pcd_dropping_pct,
+                             if_CV,
+                             label_category1 = label_category1,
+                             kappa_filter_threshold = kappa_filter_threshold,
+                             kappa_results_threshold = kappa_results_threshold,
+                             customized = customized)
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
       res <- validAllModel(cluster_names = info_genclust[['cluster_names']],
                            K_fold,
                            repeated_folds_R = repeated_CV,
@@ -611,6 +863,36 @@ validclust <- function(sync_genclust,
                            customized = customized)
 
     }else{
+      if(if_continuous){
+        res <- validAllModel_Cat_Cont(cluster_names = info_genclust[['cluster_names']],
+                                 K_fold,
+                                 repeated_folds_R = repeated_CV,
+                                 input_dt,
+                                 x_names = info_genclust[['variable_names']],
+                                 validators,
+                                 seed_num,
+                                 output_path_prefix,
+                                 validation_data_fraction = 1,
+                                 if_listwise_deletion,
+                                 y_names,
+                                 lr_maxiter,
+                                 kappa_results_threshold_final_metrics = kappa_results_threshold_final_metrics,
+                                 optimize_prob_thresh = 0.5,
+                                 pcd_dropping_pct,
+                                 if_CV,
+                                 label_category1 = label_category1,
+                                 kappa_filter_threshold = kappa_filter_threshold,
+                                 kappa_results_threshold = kappa_results_threshold)
+        write.csv(
+          res,
+          paste(
+            output_path_prefix,
+            "valid_results.csv",
+            sep = ""
+          )
+        )
+        return(res)
+      }
       res <- validAllModel_Cat(cluster_names = info_genclust[['cluster_names']],
                                K_fold,
                                repeated_folds_R = repeated_CV,

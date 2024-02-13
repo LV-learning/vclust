@@ -23,7 +23,8 @@ validator <- function(validator_cutpoint = NULL,
                       seed_num = c(seed_num_split = NA,
                                    seed_num_kfold = NA,
                                    seed_num_supervised_model = NA),
-                      validator_source_all_missing = 0){
+                      validator_source_all_missing = 0,
+                      contVarName = NULL){
   thresholds <- validator_cutpoint
   signs <- validator_cutpoint_sign
   max_min_mean <- validator_cutpoint_max_min_mean
@@ -118,6 +119,7 @@ validator <- function(validator_cutpoint = NULL,
                                    alpha = alpha,
                                    lambda = lambda,
                                    seed_num = seed_num,
-                                   validator_source_all_missing = validator_source_all_missing))
+                                   validator_source_all_missing = validator_source_all_missing,
+                                   contVarName = contVarName))
 }
 

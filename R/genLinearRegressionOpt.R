@@ -15,5 +15,6 @@ genLinearRegressionOpt <- function(y,
   MAE <- sum(abs(dt_y[,"y"] - prediction))/length(prediction)
   r_square <- summ_mod$r.squared
   adj_r_square <- summ_mod$adj.r.squared
-  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square)))
+  aic <- stats::AIC(lmod)
+  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square,aic)))
 }
