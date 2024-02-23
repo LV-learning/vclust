@@ -47,6 +47,40 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
   final_roc_res <- data.frame()
 
   final_metrics_res <- data.frame()
+  if (!is.null(kappa_filter_threshold) |
+      !is.null(kappa_results_threshold)) {
+    use_combs_all <- data.frame()
+    for (n in n_range) {
+      acomb <- dichPseudoBestZAModel_Cont(
+        folder_path = folder_path,
+        ##model classes
+        n = n,
+        input_dt = input_dt,
+        validators = validators,
+        seed_num = seed_num,
+        kappa_filter_threshold =  kappa_filter_threshold,
+        if_listwise_deletion = if_listwise_deletion,
+        y_names = y_names,
+        lr_maxiter = lr_maxiter,
+        optimize_prob_thresh = optimize_prob_thresh
+      )
+      use_combs_all <- rbind(use_combs_all, acomb)
+    }
+    if (!is.null(kappa_results_threshold)) {
+      use_combs_all <-
+        use_combs_all[use_combs_all$kappas > kappa_results_threshold, ]
+    }
+
+    use_combs_all <-
+      use_combs_all[order(use_combs_all$kappas, decreasing = TRUE), ]
+    if (!is.null(kappa_filter_threshold)) {
+      if (nrow(use_combs_all) > kappa_filter_threshold) {
+        use_combs_all <- use_combs_all[1:kappa_filter_threshold, ]
+      }
+    }
+    print("use_combs_all is:")
+    print(use_combs_all)
+  }
   ##Run n range of no PCD/CV results and save results
   ##save top x combinations' name
   ##run n dichPseudoBypathamodel
@@ -151,13 +185,6 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
           ),
           row.names = FALSE
         )
-        write.csv(res_n[["rocs"]],
-                  paste(final_roc_res_dir,
-                        n,
-                        "_classes",
-                        ".csv",
-                        sep = ""),
-                  row.names = FALSE)
       }
     } else
     {
@@ -252,7 +279,6 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
     print("end model")
   }
 
-
   #sapply(res_allModel[[2]]$whichSplit,FUN = get_comb_from_whichSplit )
   #print(final_metrics_res)
   final_metrics_res$choose_m <-
@@ -261,6 +287,7 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
     sapply(final_metrics_res$whichSplit, FUN = get_num_from_whichSplit)
   final_metrics_res$combination_of_class_prob <-
     sapply(final_metrics_res$whichSplit, FUN = get_comb_from_whichSplit)
+  print("final_metrics_res")
   print(final_metrics_res)
 
   if (validation_data_fraction != 1) {
@@ -297,6 +324,17 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE_cv > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
 
@@ -322,6 +360,17 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
     #print("finished write metrics results")

@@ -15,7 +15,9 @@ validator <- function(validator_cutpoint = NULL,
                       flip_outcome_type = NULL,
                       flipped_predictors_variables = NULL,
                       flipped_predictors_cluster = NULL,
-                      flipped_predictors_pp = NULL,
+                      flipped_predictors_pp = FALSE,
+                      predictors_names = NULL,
+                      predictors_cluster = NULL,
                       supervised_model = "logistic",
                       logistic = TRUE,
                       alpha = 1,
@@ -25,6 +27,13 @@ validator <- function(validator_cutpoint = NULL,
                                    seed_num_supervised_model = NA),
                       validator_source_all_missing = 0,
                       contVarName = NULL){
+  if(is.null(flipped_predictors_cluster)){
+    flipped_predictors_cluster <-  predictors_cluster
+  }
+  if(is.null(flipped_predictors_variables)){
+    flipped_predictors_variables <- predictors_names
+  }
+
   thresholds <- validator_cutpoint
   signs <- validator_cutpoint_sign
   max_min_mean <- validator_cutpoint_max_min_mean

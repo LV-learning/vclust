@@ -234,10 +234,13 @@ predclust <- function(sync_genclust,
                       lr_maxiter,
                       customized = F,
                       reference = NULL,
-                      comparison = NULL,
-                      if_continuous = F){ #
+                      comparison = NULL){ #
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
+  if_continuous = FALSE
+  if(outcome_obs$outcome_type == "continuous"){
+    if_continuous = TRUE
+  }
   if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
     stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
   }

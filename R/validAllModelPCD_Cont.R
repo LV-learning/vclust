@@ -172,6 +172,17 @@ validAllModelPCD_Cont <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE_cv > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
   } else{
     names(final_metrics_res) <-
       c(
@@ -194,6 +205,17 @@ validAllModelPCD_Cont <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
     #print("finished write metrics results")

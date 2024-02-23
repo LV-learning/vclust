@@ -249,26 +249,7 @@ dichPseudoByPathAllModel_Cont <- function(folder_path,
   final_metrics_res$combination_of_class_prob <-
     sapply(final_metrics_res$whichSplit, FUN = get_comb_from_whichSplit)
   if (validation_data_fraction != 1) {
-    c(
-      "MSE",
-      "MSE_SE",
-      "RMSE",
-      "RMSE_SE",
-      "MAE",
-      "MAE_SE",
-      "R_square",
-      "R_square_SE",
-      "adj_R_square",
-      "adj_R_square_SE",
-      "AIC",
-      "AIC_SE",
-      "whichSplit",
-      "validation_group",
-      "n_classes",
-      "choose_m",
-      "number_of_choices",
-      "combination_of_class_probabilities"
-    )
+
     names(final_metrics_res) <-
       c(
         "MSE_cv",
@@ -302,6 +283,17 @@ dichPseudoByPathAllModel_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE_cv > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
 
@@ -327,6 +319,17 @@ dichPseudoByPathAllModel_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
     #print("finished write metrics results")

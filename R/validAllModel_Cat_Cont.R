@@ -50,6 +50,51 @@ validAllModel_Cat_Cont <- function(cluster_names,
   if (!is.null(kappa_filter_threshold) |
       !is.null(kappa_results_threshold)) {
     use_combs_all <- data.frame()
+    acomb <- dichPseudoBestZAModelCategory_Cont(
+      folder_path = NULL,
+      ##model classes
+      n = n,
+      input_dt = input_dt,
+      validators = validators,
+      seed_num = seed_num,
+      kappa_filter_threshold =  kappa_filter_threshold,
+      if_listwise_deletion = if_listwise_deletion,
+      y_names = y_names,
+      lr_maxiter = lr_maxiter,
+      optimize_prob_thresh = optimize_prob_thresh,
+      pp_dt = pp_dt
+    )
+    #kappas,comb_name,n
+    use_combs_all <- rbind(use_combs_all, acomb)
+
+    if (!is.null(kappa_results_threshold)) {
+      use_combs_all <-
+        use_combs_all[use_combs_all$kappas > kappa_results_threshold, ]
+    }
+    use_combs_all <-
+      use_combs_all[order(use_combs_all$kappas, decreasing = TRUE), ]
+
+    if (!is.null(kappa_filter_threshold)) {
+      if (nrow(use_combs_all) > kappa_filter_threshold) {
+        use_combs_all <- use_combs_all[1:kappa_filter_threshold, ]
+      }
+    }
+
+    print("use_combs_all is:")
+    print(use_combs_all)
+  }
+  use_combs2 = NULL
+  if (!is.null(kappa_filter_threshold) |
+      !is.null(kappa_results_threshold)) {
+    use_combs <- use_combs_all[use_combs_all$n == n, "comb_name"]
+    print("use combs is:")
+    print(use_combs)
+    if(length(use_combs) != 0) use_combs2 = use_combs
+  }
+
+  if (!is.null(kappa_filter_threshold) |
+      !is.null(kappa_results_threshold)) {
+    use_combs_all <- data.frame()
     acomb <- dichPseudoBestZAModelCategory(
       folder_path = NULL,
       ##model classes
@@ -185,6 +230,17 @@ validAllModel_Cat_Cont <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE_cv > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
 
@@ -210,6 +266,17 @@ validAllModel_Cat_Cont <- function(cluster_names,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     cluster_namesbu <- cluster_names
     final_metrics_res <- final_metrics_res %>%
       transmute(model_type = "-",

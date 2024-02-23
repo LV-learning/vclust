@@ -43,6 +43,42 @@ dichPseudoByPathAllModelKmeans_Cont <- function(folder_path,
 
   ##import input data
   final_metrics_res <- data.frame()
+  if (!is.null(kappa_filter_threshold) |
+      !is.null(kappa_results_threshold)) {
+    use_combs_all <- data.frame()
+    for (n in n_range) {
+      acomb <- dichPseudoBestZAModelCategory_Cont(
+        folder_path = folder_path,
+        ##model classes
+        n = n,
+        input_dt = input_dt,
+        validators = validators,
+        seed_num = seed_num,
+        kappa_filter_threshold =  kappa_filter_threshold,
+        if_listwise_deletion = if_listwise_deletion,
+        y_names = y_names,
+        lr_maxiter = lr_maxiter,
+        optimize_prob_thresh = optimize_prob_thresh
+      )
+      #kappas,comb_name,n
+      use_combs_all <- rbind(use_combs_all, acomb)
+    }
+    if (!is.null(kappa_results_threshold)) {
+      use_combs_all <-
+        use_combs_all[use_combs_all$kappas > kappa_results_threshold, ]
+    }
+    use_combs_all <-
+      use_combs_all[order(use_combs_all$kappas, decreasing = TRUE), ]
+
+    if (!is.null(kappa_filter_threshold)) {
+      if (nrow(use_combs_all) > kappa_filter_threshold) {
+        use_combs_all <- use_combs_all[1:kappa_filter_threshold, ]
+      }
+    }
+
+    print("use_combs_all is:")
+    print(use_combs_all)
+  }
   for (n in n_range) {
     pp_dt <- getAProbFromResultPath(folder_path, n)
     # dich616_dt <- allCombOfAModelFromCategoryOpt(pp_dt, n)
@@ -250,6 +286,17 @@ dichPseudoByPathAllModelKmeans_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE_cv > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
 
@@ -275,6 +322,17 @@ dichPseudoByPathAllModelKmeans_Cont <- function(folder_path,
         "number_of_choices",
         "combination_of_class_probabilities"
       )
+    if (!is.null(kappa_results_threshold_final_metrics)) {
+      final_metrics_res <- final_metrics_res[final_metrics_res$MSE > kappa_results_threshold_final_metrics |
+                                               !final_metrics_res$validation_group %in% c("validators1"), ]
+
+      final_metrics_res <- final_metrics_res[paste(final_metrics_res$n,
+                                                   final_metrics_res$whichSplit,
+                                                   sep = "") %in%
+                                               paste(final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "n"],
+                                                     final_metrics_res[final_metrics_res$validation_group %in% c("validators1"), "whichSplit"],
+                                                     sep = ""), ]
+    }
     # write.csv(final_metrics_res,
     #           paste(output_path_prefix, "metrics_results.csv", sep = ""))
     #print("finished write metrics results")
