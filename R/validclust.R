@@ -806,6 +806,8 @@ validclust <- function(sync_genclust,
 
       input_dt <- as.data.frame(input_dt)
     }
+
+    input_dt <- input_dt[stats::complete.cases(input_dt[,info_genclust[['cluster_names']]]),]
     print("start to run syncF")
     if(!all(apply(input_dt[,info_genclust$cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_continuous){

@@ -28,6 +28,21 @@ calculateMetricsForAProb.validator_direct <- function(validator,
   if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
     set.seed(seed_num['seed_num_supervised_model'])
   }
+  acc_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  acc_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  auc_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  auc_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  sensg_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  sensg_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  spcg_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  spcg_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  kappa_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  kappa_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
   for(r in 1:repeated_folds_R){
     accgmc12=matrix(NA,K_fold,r_pseudo)
     aucmc12=matrix(NA,K_fold,r_pseudo)
@@ -119,13 +134,18 @@ calculateMetricsForAProb.validator_direct <- function(validator,
       acc_m <- NA
       acc_d <- NA
     }else{
+      acc_m_perRepPCD[,r] <- (acc_m_k)
+      acc_v_perRepPCD[,r] <- (acc_d_k)
       acc_m <- mean(acc_m_k,na.rm = TRUE)
       acc_d <- (mean(acc_d_k,na.rm = TRUE) + var(acc_m_k,na.rm = TRUE))^0.5
     }
     if(sum(is.na(auc_m_k)) > r_pseudo_threshold){
       auc_m <- NA
-      acc_d <- NA
+      auc_d <- NA
     }else{
+      auc_m_perRepPCD[,r] <- (auc_m_k)
+      auc_v_perRepPCD[,r] <- (auc_d_k)
+
       auc_m <- mean(auc_m_k,na.rm = TRUE)
       auc_d <- (mean(auc_d_k,na.rm = TRUE) + var(auc_m_k,na.rm = TRUE))^0.5
     }
@@ -133,6 +153,8 @@ calculateMetricsForAProb.validator_direct <- function(validator,
       sensg_m <- NA
       sensg_d <- NA
     }else{
+      sensg_m_perRepPCD[,r] <- (sensg_m_k)
+      sensg_v_perRepPCD[,r] <- (sensg_d_k)
       sensg_m <- mean(sensg_m_k,na.rm = TRUE)
       sensg_d <- (mean(sensg_d_k,na.rm = TRUE) + var(sensg_m_k,na.rm = TRUE))^0.5
     }
@@ -140,6 +162,8 @@ calculateMetricsForAProb.validator_direct <- function(validator,
       spcg_m <- NA
       spcg_d <- NA
     }else{
+      spcg_m_perRepPCD[,r] <- (spcg_m_k)
+      spcg_v_perRepPCD[,r] <- (spcg_d_k)
       spcg_m <- mean(spcg_m_k,na.rm=TRUE)
       spcg_d <- (mean(spcg_d_k,na.rm = TRUE) + var(spcg_m_k,na.rm = TRUE))^0.5
     }
@@ -147,6 +171,8 @@ calculateMetricsForAProb.validator_direct <- function(validator,
       kappa_m <- NA
       kappa_d <- NA
     }else{
+      kappa_m_perRepPCD[,r] <- (kappa_m_k)
+      kappa_v_perRepPCD[,r] <- (kappa_d_k)
       kappa_m <- mean(kappa_m_k,na.rm=TRUE)
       kappa_d <- (mean(kappa_d_k,na.rm = TRUE) + var(kappa_m_k,na.rm = TRUE))^0.5
     }
@@ -156,6 +182,30 @@ calculateMetricsForAProb.validator_direct <- function(validator,
   }
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
   roc_res <- aggregate(roc_res[,c("TPR","FPR")],by=list(roc_res$threshold),mean)
+
+  acc_m_overall=mean(acc_m_perRepPCD, na.rm = TRUE)
+  acc_v_overall=(mean(acc_v_perRepPCD, na.rm = TRUE)+ var(c(acc_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  auc_m_overall=mean(auc_m_perRepPCD, na.rm = TRUE)
+  auc_v_overall=(mean(auc_v_perRepPCD, na.rm = TRUE)+ var(c(auc_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  sensg_m_overall=mean(sensg_m_perRepPCD)
+  sensg_v_overall=(mean(sensg_v_perRepPCD)+ var(c(sensg_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  spcg_m_overall=mean(spcg_m_perRepPCD, na.rm = TRUE)
+  spcg_v_overall=(mean(spcg_v_perRepPCD, na.rm = TRUE)+ var(c(spcg_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  kappa_m_overall=mean(kappa_m_perRepPCD, na.rm = TRUE)
+  kappa_v_overall=(mean( kappa_v_perRepPCD, na.rm = TRUE)+ var(c(kappa_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  print(colMeans(res_matrix,na.rm = TRUE))
+
+  res_matrix <- c(acc_m_overall, acc_v_overall,
+                 auc_m_overall, auc_v_overall,
+                 sensg_m_overall, sensg_v_overall,
+                 spcg_m_overall, spcg_v_overall,
+                 kappa_m_overall, kappa_v_overall)
+
   names(res_matrix) <- c('acc_m',
                          'acc_d',
                          'auc_m',
@@ -166,6 +216,7 @@ calculateMetricsForAProb.validator_direct <- function(validator,
                          'spcg_d',
                          'kappa_m',
                          'kappa_d')
-  res_matrix <- colMeans(res_matrix,na.rm = TRUE)
+  print(res_matrix)
+  #res_matrix <- colMeans(res_matrix,na.rm = TRUE)
   return(list(res_matrix,roc_res))
 }

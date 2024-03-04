@@ -38,6 +38,10 @@ calculateMetricsForAProb.default <- function(validator,
   if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
     set.seed(seed_num['seed_num_supervised_model'])
   }
+
+  kappa_m_perRepPCD=matrix(0,nrow=r_pseudo,ncol=repeated_folds_R)
+  kappa_v_perRepPCD=matrix(0,nrow=r_pseudo,ncol=repeated_folds_R)
+
   for(r in 1:repeated_folds_R){
     accgmc12=matrix(NA,K_fold,r_pseudo)
     aucmc12=matrix(NA,K_fold,r_pseudo)
@@ -123,8 +127,6 @@ calculateMetricsForAProb.default <- function(validator,
     kappa_d_k[kappa_na_count_k_larger_id] <- NA
     print(kappa_m_k)
     #r_pseudo_threshold
-
-
     if(sum(is.na(acc_m_k)) > r_pseudo_threshold){
       acc_m <- NA
       acc_d <- NA
@@ -138,6 +140,7 @@ calculateMetricsForAProb.default <- function(validator,
     }else{
       auc_m <- mean(auc_m_k,na.rm = TRUE)
       auc_d <- (mean(auc_d_k,na.rm = TRUE) + var(auc_m_k,na.rm = TRUE))^0.5
+      #         mean( kappa_v_perRepPCD) +   var(c(kappa_m_perRepPCD))/(pseudoClassDraw*repM)
     }
     if(sum(is.na(sensg_m_k)) > r_pseudo_threshold){
       sensg_m <- NA
@@ -157,15 +160,26 @@ calculateMetricsForAProb.default <- function(validator,
       kappa_m <- NA
       kappa_d <- NA
     }else{
+      kappa_m_perRepPCD[,r] <- (kappa_m_k)
+      kappa_v_perRepPCD[,r] <- (kappa_d_k)
       kappa_m <- mean(kappa_m_k,na.rm=TRUE)
       kappa_d <- (mean(kappa_d_k,na.rm = TRUE) + var(kappa_m_k,na.rm = TRUE))^0.5
     }
-
     res_vec <- c(acc_m,acc_d,auc_m,auc_d,sensg_m,sensg_d,spcg_m,spcg_d,kappa_m,kappa_d)
     res_matrix <- c(res_matrix,res_vec)
   }
   roc_res <- aggregate(roc_res[,c("TPR","FPR")],by=list(roc_res$threshold),mean)
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
+
+
+  kappa_m_overall=mean(kappa_m_perRepPCD)
+  kappa_v_overall=mean( kappa_v_perRepPCD)+ var(c(kappa_m_perRepPCD))/(r_pseudo*repeated_folds_R)
+
+  print(colMeans(res_matrix,na.rm = TRUE))
+  print(kappa_m_overall)
+  print(kappa_v_overall)
+  stop("kappa_v_overall")
+
   ### acc_m acc_d auc_m auc_d
   #r1
   #r2
