@@ -36,6 +36,23 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
     set.seed(seed_num['seed_num_regression_model'])
   }
 
+  MSE_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  MSE_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  RMSE_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  RMSE_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  MAE_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  MAE_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  r_square_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  r_square_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  adj_r_square_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  adj_r_square_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+
+  aic_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  aic_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
 
   for(r in 1:repeated_folds_R){
     MSE = matrix(NA, K_fold, r_pseudo)
@@ -100,6 +117,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       MSE_m <- NA
       MSE_d <- NA
     }else{
+      MSE_m_perRepPCD[,r] <- (MSE_m_k)
+      MSE_v_perRepPCD[,r] <- (MSE_d_k)
       MSE_m <- mean(MSE_m_k,na.rm = TRUE)
       MSE_d <- (mean(MSE_d_k,na.rm = TRUE) + var(MSE_m_k,na.rm = TRUE))^0.5
     }
@@ -107,6 +126,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       RMSE_m <- NA
       RMSE_d <- NA
     }else{
+      RMSE_m_perRepPCD[,r] <- (RMSE_m_k)
+      RMSE_v_perRepPCD[,r] <- (RMSE_d_k)
       RMSE_m <- mean(RMSE_m_k,na.rm = TRUE)
       RMSE_d <- (mean(RMSE_d_k,na.rm = TRUE) + var(RMSE_m_k,na.rm = TRUE))^0.5
     }
@@ -114,6 +135,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       MAE_m <- NA
       MAE_d <- NA
     }else{
+      MAE_m_perRepPCD[,r] <- (MAE_m_k)
+      MAE_v_perRepPCD[,r] <- (MAE_d_k)
       MAE_m <- mean(MAE_m_k,na.rm = TRUE)
       MAE_d <- (mean(MAE_d_k,na.rm = TRUE) + var(MAE_m_k,na.rm = TRUE))^0.5
     }
@@ -121,6 +144,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       r_square_m <- NA
       r_square_d <- NA
     }else{
+      r_square_m_perRepPCD[,r] <- (r_square_m_k)
+      r_square_v_perRepPCD[,r] <- (r_square_d_k)
       r_square_m <- mean(r_square_m_k,na.rm=TRUE)
       r_square_d <- (mean(r_square_d_k,na.rm = TRUE) + var(r_square_m_k,na.rm = TRUE))^0.5
     }
@@ -128,6 +153,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       adj_r_square_m <- NA
       adj_r_square_d <- NA
     }else{
+      adj_r_square_m_perRepPCD[,r] <- (adj_r_square_m_k)
+      adj_r_square_v_perRepPCD[,r] <- (adj_r_square_d_k)
       adj_r_square_m <- mean(adj_r_square_m_k,na.rm=TRUE)
       adj_r_square_d <- (mean(adj_r_square_d_k,na.rm = TRUE) + var(adj_r_square_m_k,na.rm = TRUE))^0.5
     }
@@ -135,6 +162,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
       aic_m <- NA
       aic_d <- NA
     }else{
+      aic_m_perRepPCD[,r] <- (aic_m_k)
+      aic_v_perRepPCD[,r] <- (aic_d_k)
       aic_m <- mean(aic_m_k,na.rm = TRUE)
       aic_d <- (mean(aic_d_k,na.rm = TRUE) + var(aic_m_k,na.rm = TRUE))^0.5
     }
@@ -155,7 +184,33 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
         aic_d)
     res_matrix <- c(res_matrix,res_vec)
   }
+
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
+
+  MSE_m_overall=mean(MSE_m_perRepPCD, na.rm = TRUE)
+  MSE_v_overall=(mean(MSE_v_perRepPCD, na.rm = TRUE)+ var(c(MSE_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  RMSE_m_overall=mean(RMSE_m_perRepPCD, na.rm = TRUE)
+  RMSE_v_overall=(mean(RMSE_v_perRepPCD, na.rm = TRUE)+ var(c(RMSE_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  MAE_m_overall=mean(MAE_m_perRepPCD)
+  MAE_v_overall=(mean(MAE_v_perRepPCD)+ var(c(MAE_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  r_square_m_overall=mean(r_square_m_perRepPCD, na.rm = TRUE)
+  r_square_v_overall=(mean(r_square_v_perRepPCD, na.rm = TRUE)+ var(c(r_square_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  adj_r_square_m_overall=mean(adj_r_square_m_perRepPCD, na.rm = TRUE)
+  adj_r_square_v_overall=(mean(adj_r_square_v_perRepPCD, na.rm = TRUE)+ var(c(adj_r_square_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+
+  aic_m_overall=mean(aic_m_perRepPCD, na.rm = TRUE)
+  aic_v_overall=(mean( aic_v_perRepPCD, na.rm = TRUE)+ var(c(aic_m_perRepPCD), na.rm = TRUE)/(r_pseudo*repeated_folds_R)) ^ 0.5
+  print(colMeans(res_matrix,na.rm = TRUE))
+  res_matrix <- c(MSE_m_overall, MSE_v_overall,
+                  RMSE_m_overall, RMSE_v_overall,
+                  MAE_m_overall, MAE_v_overall,
+                  r_square_m_overall, r_square_v_overall,
+                  adj_r_square_m_overall, adj_r_square_v_overall,
+                  aic_m_overall, aic_v_overall)
 
   names(res_matrix) <- c(
     'MSE_m',
@@ -171,7 +226,7 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
     'aic_m',
     'aic_d'
   )
-  res_matrix <- colMeans(res_matrix,na.rm = TRUE)
+  #res_matrix <- colMeans(res_matrix,na.rm = TRUE)
   ##results without CV
 
   MSE_test=matrix(NA,1,r_pseudo)

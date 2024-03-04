@@ -759,6 +759,7 @@ predclust <- function(sync_genclust,
                     MSE_SE_test = MSE_SE_test,
                     RMSE_train = RMSE_cv,
                     RMSE_test = RMSE_test,
+                    RMSE_SE_cv = RMSE_SE_cv,
                     RMSE_SE_test = RMSE_SE_test,
                     MAE_train = MAE_cv,
                     MAE_test = MAE_test,
@@ -960,6 +961,7 @@ predclust <- function(sync_genclust,
     }
     input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     print("start to run syncF")
+    input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
         if(if_continuous){
