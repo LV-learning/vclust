@@ -83,6 +83,7 @@ dichPseudoByPathAllModelMclust <- function(folder_path,
     ##out put dich without PCD
     ##below are validations
     pp_dt <- getAProbFromResultPath(folder_path, n)
+    pp_dt <- pp_dt[rownames(input_dt),]
     cat("dt result is ",dim(dt))
     comb_dt <- as.data.frame(allCombOfAModelOpt(pp_dt,n))
     comb_dt[comb_dt > 1] <- 1

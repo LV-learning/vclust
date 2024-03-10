@@ -20,7 +20,8 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
                                           pcd_dropping_pct,
                                           if_CV,
                                           label_category1 = NULL,
-                                          customized = F
+                                          customized = F,
+                                          used_clusters = NULL
 ) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
@@ -88,6 +89,14 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
     ##out put dich without PCD
     ##below are validations
     pp_dt <- getAProbFromResultPath(folder_path, n)
+    if(customized){
+      cluster_names <- names(pp_dt)[1:(length(names(pp_dt))-1)]
+      n = length(used_clusters)
+      pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+      pp_dt <- pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),,drop=FALSE]
+      input_dt <- input_dt[intersect(rownames(input_dt),rownames(pp_dt)),]
+    }
+    pp_dt <- pp_dt[rownames(input_dt), , drop=FALSE]
     # dich616_dt <- allCombOfAModelOpt(pp_dt, n)
     # dich616_dt <- dichProbAllCombOfAModel(dich616_dt)
     # dich616_dt$n_classes <- n
@@ -111,7 +120,6 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
       print(use_combs)
       if (length(use_combs) != 0) {
         if(customized){
-          pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
           res_n <- dichPseudoByPathAModelNoPCDCategoryOpt(
             pp_dt = pp_dt,
             ##model classes
@@ -190,7 +198,7 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
     {
 
       if(customized){
-        pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+        print(pp_dt)
         res_n <- dichPseudoByPathAModelNoPCDCategory(
           pp_dt = pp_dt,
           ##model classes

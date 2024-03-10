@@ -211,6 +211,7 @@ validclust <- function(sync_genclust,
 ){
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
+  if(customized) used_clusters <- unique(c(reference,comparison))
   if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
   if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
   label_category1 <- NULL
@@ -350,7 +351,8 @@ validclust <- function(sync_genclust,
                                                    pcd_dropping_pct,
                                                    if_CV,
                                                    label_category1 = label_category1,
-                                                   customized = customized)
+                                                   customized = customized,
+                                                  used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "GMM",
                     model_spec1 = global_parameters$GMM_trend,
@@ -407,7 +409,8 @@ validclust <- function(sync_genclust,
                                            pcd_dropping_pct,
                                            if_CV,
                                            label_category1 = label_category1,
-                                           customized = customized)
+                                           customized = customized,
+                                           used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "GMM",
                   model_spec1 = global_parameters$GMM_trend,
@@ -439,7 +442,8 @@ validclust <- function(sync_genclust,
       res
 
 
-    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering")){
+    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering"))
+      {
 
       if(if_continuous){
         res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
@@ -464,7 +468,8 @@ validclust <- function(sync_genclust,
                                                   pcd_dropping_pct,
                                                   if_CV,
                                                   label_category1 = label_category1,
-                                                  customized = customized)
+                                                  customized = customized,
+                                                  used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "MBC",
                     model_spec1 = global_parameters$MBCtype,
@@ -520,7 +525,8 @@ validclust <- function(sync_genclust,
                                                  pcd_dropping_pct,
                                                  if_CV,
                                                  label_category1 = label_category1,
-                                                 customized = customized)
+                                                 customized = customized,
+                                                 used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "MBC",
                   model_spec1 = global_parameters$MBCtype,
@@ -551,7 +557,8 @@ validclust <- function(sync_genclust,
       )
       res
 
-    }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means")){
+    }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means"))
+      {
       if(if_continuous){
         res <- dichPseudoByPathAllModelKmeans_Cont(folder_path,
                                                     ##model classes
@@ -573,7 +580,9 @@ validclust <- function(sync_genclust,
                                                     optimize_prob_thresh = 0.5,
                                                     pcd_dropping_pct,
                                                     if_CV,
-                                                    label_category1)
+                                                    label_category1,
+                                                   customized = customized,
+                                                   used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "K-means",
                     model_spec1 = "-",
@@ -627,7 +636,9 @@ validclust <- function(sync_genclust,
                                             optimize_prob_thresh = 0.5,
                                             pcd_dropping_pct,
                                             if_CV,
-                                            label_category1)
+                                            label_category1,
+                                            customized = customized,
+                                            used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "K-means",
                   model_spec1 = "-",
@@ -659,7 +670,8 @@ validclust <- function(sync_genclust,
       res
 
 
-    }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group")){
+    }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group"))
+      {
       if(if_continuous){
         res <- dichPseudoByPathAllModelO_Cont(folder_path,
                                                K_fold,
@@ -830,7 +842,8 @@ validclust <- function(sync_genclust,
                              label_category1 = label_category1,
                              kappa_filter_threshold = kappa_filter_threshold,
                              kappa_results_threshold = kappa_results_threshold,
-                             customized = customized)
+                             customized = customized,
+                             used_clusters = used_clusters)
         write.csv(
           res,
           paste(
@@ -861,9 +874,13 @@ validclust <- function(sync_genclust,
                            label_category1 = label_category1,
                            kappa_filter_threshold = kappa_filter_threshold,
                            kappa_results_threshold = kappa_results_threshold,
-                           customized = customized)
+                           customized = customized,
+                           used_clusters = used_clusters)
 
     }else{
+      if(customized){
+        input_dt <- input_dt[rowSums(input_dt[,used_clusters, drop=F]) == 1,]
+      }
       if(if_continuous){
         res <- validAllModel_Cat_Cont(cluster_names = info_genclust[['cluster_names']],
                                  K_fold,
@@ -883,7 +900,9 @@ validclust <- function(sync_genclust,
                                  if_CV,
                                  label_category1 = label_category1,
                                  kappa_filter_threshold = kappa_filter_threshold,
-                                 kappa_results_threshold = kappa_results_threshold)
+                                 kappa_results_threshold = kappa_results_threshold,
+                                 customized = customized,
+                                 used_clusters = used_clusters)
         write.csv(
           res,
           paste(
@@ -912,7 +931,9 @@ validclust <- function(sync_genclust,
                                if_CV,
                                label_category1 = label_category1,
                                kappa_filter_threshold = kappa_filter_threshold,
-                               kappa_results_threshold = kappa_results_threshold)
+                               kappa_results_threshold = kappa_results_threshold,
+                               customized = customized,
+                               used_clusters = used_clusters)
     }
     write.csv(
       res,

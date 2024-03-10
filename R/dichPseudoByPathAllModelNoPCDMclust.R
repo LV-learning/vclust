@@ -20,7 +20,8 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
                                                 pcd_dropping_pct,
                                                 if_CV,
                                                 label_category1 = NULL,
-                                                customized = F) {
+                                                customized = F,
+                                                used_clusters = NULL) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -83,6 +84,14 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
     ##out put dich without PCD
     ##below are validations
     pp_dt <- getAProbFromResultPath(folder_path, n)
+    if(customized){
+      cluster_names <- names(pp_dt)[1:(length(names(pp_dt))-1)]
+      n = length(used_clusters)
+      pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+      pp_dt <- pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),,drop=FALSE]
+      input_dt <- input_dt[intersect(rownames(input_dt),rownames(pp_dt)),]
+    }
+    pp_dt <- pp_dt[rownames(input_dt), , drop=FALSE]
     print("pp_dt rownames")
     print(rownames(pp_dt))
     # dich616_dt <- allCombOfAModelOpt(pp_dt, n)
@@ -109,7 +118,6 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
       if (length(use_combs) != 0) {
 
         if(customized){
-          pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
           res_n <- dichPseudoByPathAModelNoPCDCategoryOpt(
             pp_dt = pp_dt,
             ##model classes
@@ -193,9 +201,7 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
                   row.names = FALSE)
       }
     } else{
-
       if(customized){
-        pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
         res_n <- dichPseudoByPathAModelNoPCDCategory(
           pp_dt = pp_dt,
           ##model classes
@@ -265,6 +271,7 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
       metrics <- res_n[["metrics"]]
       metrics$n_classes <- n
       final_metrics_res <- rbind(final_metrics_res, metrics)
+      print(res_n)
       pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                 res_n[["id_df"]])
       write.csv(
@@ -559,6 +566,5 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
     #   )
     # )
   }
-
   return(final_metrics_res_w_aicbic)
 }

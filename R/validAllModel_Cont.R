@@ -19,7 +19,8 @@ validAllModel_Cont <- function(cluster_names,
                           label_category1 = NULL,
                           kappa_filter_threshold = NULL,
                           kappa_results_threshold = NULL,
-                          customized = F){
+                          customized = F,
+                          used_clusters = NULL){
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -43,10 +44,18 @@ validAllModel_Cont <- function(cluster_names,
   }
   final_roc_res <- data.frame()
   final_metrics_res <- data.frame()
-  n = length(cluster_names)
   pp_dt <- input_dt[,cluster_names]
-  names(pp_dt) <- paste("P",1:ncol(pp_dt),sep = "")
-  pp_dt$placeholder <- 1
+  if(customized){
+    n = length(used_clusters)
+    pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+    pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),]
+    input_dt <- input_dt[rownames(input_dt) %in% rownames(pp_dt),]
+  }else{
+    n = length(cluster_names)
+    names(pp_dt) <- paste("P",1:ncol(pp_dt),sep = "")
+    pp_dt$placeholder <- 1
+  }
+
   if (!is.null(kappa_filter_threshold) |
       !is.null(kappa_results_threshold)) {
     use_combs_all <- data.frame()
@@ -97,6 +106,8 @@ validAllModel_Cont <- function(cluster_names,
     if (length(use_combs) != 0) {
       if(customized){
         pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+        pp_dt <- pp_dt[rowSums(pp_dt[,used_clusters,drop=F])==1,]
+        input_dt <- input_dt[rownames(input_dt) %in% rownames(pp_dt),]
         res_n <- dichPseudoByPathAModelNoPCDCategoryOpt(
           pp_dt = pp_dt,
           ##model classes
@@ -164,6 +175,8 @@ validAllModel_Cont <- function(cluster_names,
 
     if(customized){
       pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
+      pp_dt <- pp_dt[rowSums(pp_dt[,used_clusters,drop=F])==1,]
+      input_dt <- input_dt[rownames(input_dt) %in% rownames(pp_dt),]
       res_n <- dichPseudoByPathAModelNoPCDCategory(
         pp_dt = pp_dt,
         ##model classes
