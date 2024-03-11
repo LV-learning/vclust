@@ -9,8 +9,6 @@ dichPseudoPrepare.validator_continuous <- function(validator,
   ##construct dich variable
   ##listwise deletion
   dt <- pp_dt
-  cat("input result in dichPseudoPrepare is ",dim(input_dt),"\n")
-  cat("dt result in dichPseudoPrepare is ",dim(dt))
   combined_dt <- cbind(input_dt,dt)
   remove(dt)
   remove(input_dt)
@@ -31,7 +29,7 @@ dichPseudoPrepare.validator_continuous <- function(validator,
   #                                     dt = combined_dt)
   # combined_dt <- removeValVarNa(validator = validator,
   #                               dt = combined_dt)
-  combined_dt[,'variable_start_to_end'] <- combined_dt[,validator$contVarName]
+  combined_dt <- data.frame(variable_start_to_end = combined_dt[,validator$contVarName], combined_dt)
   combined_dt <- combined_dt[stats::complete.cases(combined_dt[,c(validator$listwise_deletion_variables,"variable_start_to_end")]),]
   print("final combined_dt dimension is ")
   print(dim(combined_dt))

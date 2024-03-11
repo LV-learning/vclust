@@ -46,9 +46,10 @@ validAllModel_Cont <- function(cluster_names,
   final_metrics_res <- data.frame()
   pp_dt <- input_dt[,cluster_names]
   if(customized){
+    pp_dt$placeholder <- 1
     n = length(used_clusters)
     pp_dt <- data.frame(trajectory_clusters = apply(pp_dt[,1:(ncol(pp_dt)-1),drop=F], 1, which.max))
-    pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),]
+    pp_dt <- pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),,drop = FALSE]
     input_dt <- input_dt[rownames(input_dt) %in% rownames(pp_dt),]
   }else{
     n = length(cluster_names)

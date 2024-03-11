@@ -237,6 +237,7 @@ predclust <- function(sync_genclust,
                       comparison = NULL){ #
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
+  if(customized) used_clusters <- unique(c(reference,comparison))
   if_continuous = FALSE
   if(outcome_obs$outcome_type == "continuous"){
     if_continuous = TRUE
@@ -548,7 +549,8 @@ predclust <- function(sync_genclust,
                                                pcd_dropping_pct,
                                                if_CV,
                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                               customized = customized)
+                                               customized = customized,
+                                               used_clusters = used_clusters)
 
         }else{
           res <- dichPseudoByPathAllModelNoPCD(folder_path,
@@ -573,7 +575,8 @@ predclust <- function(sync_genclust,
                                                pcd_dropping_pct,
                                                if_CV,
                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                               customized = customized)
+                                               customized = customized,
+                                               used_clusters = used_clusters)
         }
 
       }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
@@ -600,7 +603,8 @@ predclust <- function(sync_genclust,
                                                     pcd_dropping_pct,
                                                     if_CV,
                                                     label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                                    customized = customized)
+                                                    customized = customized,
+                                                    used_clusters = used_clusters)
 
         }else{
           res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
@@ -625,7 +629,8 @@ predclust <- function(sync_genclust,
                                                      pcd_dropping_pct,
                                                      if_CV,
                                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                                     customized = customized)
+                                                     customized = customized,
+                                                     used_clusters = used_clusters)
         }
 
 
@@ -651,7 +656,9 @@ predclust <- function(sync_genclust,
                                                 optimize_prob_thresh,
                                                 pcd_dropping_pct,
                                                 if_CV,
-                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                customized = customized,
+                                                used_clusters = used_clusters)
         }else{
           res <- dichPseudoByPathAllModelKmeans(folder_path,
                                                 ##model classes
@@ -673,7 +680,9 @@ predclust <- function(sync_genclust,
                                                 optimize_prob_thresh,
                                                 pcd_dropping_pct,
                                                 if_CV,
-                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                customized = customized,
+                                                used_clusters = used_clusters)
         }
 
 
@@ -878,9 +887,9 @@ predclust <- function(sync_genclust,
     }
 
     label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
+
     if(!sjmisc::is_empty(reference)) reference <- paste("P", which(cluster_names %in% reference), sep = "")
     if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(cluster_names %in% comparison), sep = "")
-
     if(customized){
       if_PCD <- FALSE
       label_category1 <- reference
@@ -945,8 +954,6 @@ predclust <- function(sync_genclust,
                                    contVarName = outcome_obs$outcome_continuous))
 
     }
-
-
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
@@ -959,9 +966,9 @@ predclust <- function(sync_genclust,
       eval(parse(text = text_useobs))
       input_dt <- as.data.frame(input_dt)
     }
-    input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     print("start to run syncF")
     input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
+    print(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))})))
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
         if(if_continuous){
@@ -1149,7 +1156,8 @@ predclust <- function(sync_genclust,
                                      pcd_dropping_pct,
                                      if_CV,
                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                     customized = customized)
+                                    customized = customized,
+                                    used_clusters = used_clusters)
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
@@ -1239,7 +1247,8 @@ predclust <- function(sync_genclust,
                              pcd_dropping_pct,
                              if_CV,
                              label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                             customized = customized)
+                             customized = customized,
+                             used_clusters = used_clusters)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -1298,6 +1307,9 @@ predclust <- function(sync_genclust,
       }
     }else
     {
+      if(customized){
+        input_dt <- input_dt[rowSums(input_dt[,used_clusters, drop=F]) == 1,]
+      }
       if(if_continuous){
         res <- validAllModel_Cat_Cont(cluster_names,
                                        K_fold,
@@ -1315,7 +1327,9 @@ predclust <- function(sync_genclust,
                                        optimize_prob_thresh = 0.5,
                                        pcd_dropping_pct,
                                        if_CV,
-                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                      customized = customized,
+                                      used_clusters = used_clusters)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -1402,7 +1416,9 @@ predclust <- function(sync_genclust,
                                optimize_prob_thresh = 0.5,
                                pcd_dropping_pct,
                                if_CV,
-                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                               customized = customized,
+                               used_clusters = used_clusters)
       if(train_fraction == 1){
         res <- res %>%
           transmute(Supervised_method = supervised_method,

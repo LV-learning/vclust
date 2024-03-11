@@ -75,8 +75,9 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
         print(label_category1i)
         label_category1u <- c(label_category1u,label_category1i)
       }
-
+      print(label_category1u)
     }
+    print(dt_rmna)
     dt_comb <- allCombOfAModelFromCategoryOpt(dt_rmna, n,label_category1=label_category1u)
     if (validation_data_fraction != 1) {
       final_metrics <- data.frame()
@@ -176,7 +177,6 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
                 pcd_dropping_pct = pcd_dropping_pct
               )
           }
-
           tryCatch({
             roc_tmp <- m_res[[2]]
             roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
