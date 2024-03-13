@@ -238,19 +238,136 @@ predclust <- function(sync_genclust,
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(customized) used_clusters <- unique(c(reference,comparison))
+  if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
+  if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
+    stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
+  }
+
+  if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
+    all_clusters <- cluster_names
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+      dir.create(global_parameters$output_path_prefix)
+    }
+
+    res <- data.frame()
+    output_tmp <- global_parameters$output_path_prefix
+    for(comparison in comparisons){
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+        dir.create(global_parameters$output_path_prefix)
+      }
+      csv_files <- paste(output_tmp, "/", list.files(output_tmp, ".csv$"), sep = "")
+      file.copy(from=csv_files, to=global_parameters$output_path_prefix,
+                overwrite = TRUE, recursive = FALSE,
+                copy.mode = TRUE)
+      tmpRes <- predclust(sync_genclust,
+                          sync_validclust,
+                          output_path_prefix, #
+                          data_path, #
+                          variable_names, #
+                          naString,
+                          predictors_names,
+                          cluster_names,
+                          label_category1, #
+                          cluster_label_position, #
+                          outcome_obs,
+                          supervised_method, #
+                          glmnet_specs,
+                          seed_numbers, #
+                          useobs, #
+                          listwise_deletion_variables, #
+                          train_fraction, #
+                          if_CV, #
+                          K_fold, #
+                          repeated_CV, #
+                          if_PCD, #
+                          r_PCD, #
+                          lr_maxiter,
+                          customized,
+                          reference,
+                          comparison = comparison)
+      global_parameters$output_path_prefix <<- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "predclust_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & isTRUE(sync_validclust)){
+    stop("Please specify comparison for sync_genclust == FALSE and sync_validclust == TRUE")
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
+    if(length(cluster_names) == 1){
+      all_clusters <- paste("P",1:class_range, sep="")
+    }else{
+      all_clusters <- cluster_names
+    }
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(output_path_prefix) == FALSE){
+      dir.create(output_path_prefix)
+    }
+    res <- data.frame()
+    output_tmp <- output_path_prefix
+
+    for(comparison in comparisons){
+      output_path_prefix <- paste(output_tmp, "/", comparison, "/", sep = "")
+      tmpRes <- predclust(sync_genclust,
+                          sync_validclust,
+                          output_path_prefix, #
+                          data_path, #
+                          variable_names, #
+                          naString,
+                          predictors_names,
+                          cluster_names,
+                          label_category1, #
+                          cluster_label_position, #
+                          outcome_obs,
+                          supervised_method, #
+                          glmnet_specs,
+                          seed_numbers, #
+                          useobs, #
+                          listwise_deletion_variables, #
+                          train_fraction, #
+                          if_CV, #
+                          K_fold, #
+                          repeated_CV, #
+                          if_PCD, #
+                          r_PCD, #
+                          lr_maxiter,
+                          customized,
+                          reference,
+                          comparison = comparison)
+      output_path_prefix <- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "predclust_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }
+
+
   if_continuous = FALSE
   if(outcome_obs$outcome_type == "continuous"){
     if_continuous = TRUE
   }
-  if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
-    stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
-  }
+
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
   kappa_results_threshold_final_metrics <- 0.005
   combined_posterior_prob_threshold <- 0.5
   if_listwise_deletion <- FALSE
-  pcd_dropping_pct <- c(0.1,0.1,1)
+  pcd_dropping_pct <- c(0.2,0.2,1)
   seed_num <- seed_numbers
   seed_num['seed_num_PCD'] <- seed_num['seed_num_pcd']
 

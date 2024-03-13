@@ -86,6 +86,7 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
   ##save top x combinations' name
   ##run n dichPseudoBypathamodel
   for (n in n_range) {
+    n_backup <- n
     ##out put dich without PCD
     ##below are validations
     pp_dt <- getAProbFromResultPath(folder_path, n)
@@ -178,7 +179,7 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
           )
         }
         metrics <- res_n[["metrics"]]
-        metrics$n_classes <- n
+        metrics$n_classes <- n_backup
         final_metrics_res <- rbind(final_metrics_res, metrics)
         pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                   res_n[["id_df"]])
@@ -267,7 +268,7 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
         )
       }
       metrics <- res_n[["metrics"]]
-      metrics$n_classes <- n
+      metrics$n_classes <- n_backup
       final_metrics_res <- rbind(final_metrics_res, metrics)
       pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                 res_n[["id_df"]])

@@ -191,9 +191,6 @@ chooseMClassFromNOpt <- function(class_cols_dt,m,n){
   # names(class_cols_dt) <- sapply(1:ncol(class_cols_dt),
   #                                FUN=function(x){paste("P",x,sep = "")})
   combinations <- utils::combn(seq(1,n,1),m)
-  #final_out <- data.frame()
-  print(combinations)
-  print(class_cols_dt)
   final_out<-apply(combinations,2,FUN = function(x){
     temp <- rowSums(class_cols_dt[,x,drop=FALSE])
     temp <- as.data.frame(temp)
@@ -233,7 +230,6 @@ allCombOfAModelFromCategoryOpt <- function(pp_dt,n,label_category1=NULL){
   class_cols_dt <- sjmisc::to_dummy(class_cols_dt)
   rownames(class_cols_dt) <- rowname_tmp
   names(class_cols_dt) <- paste("P", unique_entry, sep="")
-  print(head(class_cols_dt))
   final_list <- list()
   j <- 1
   for(i in 1:(n-1)){

@@ -83,6 +83,7 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
   for (n in n_range) {
     ##out put dich without PCD
     ##below are validations
+    n_backup <- n
     pp_dt <- getAProbFromResultPath(folder_path, n)
     if(customized){
       cluster_names <- names(pp_dt)[1:(length(names(pp_dt))-1)]
@@ -177,7 +178,7 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
           )
         }
         metrics <- res_n[["metrics"]]
-        metrics$n_classes <- n
+        metrics$n_classes <- n_backup
         final_metrics_res <- rbind(final_metrics_res, metrics)
         pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                   res_n[["id_df"]])
@@ -269,7 +270,7 @@ dichPseudoByPathAllModelNoPCDMclust <- function(folder_path,
         )
       }
       metrics <- res_n[["metrics"]]
-      metrics$n_classes <- n
+      metrics$n_classes <- n_backup
       final_metrics_res <- rbind(final_metrics_res, metrics)
       print(res_n)
       pp_dt_and_if_in_validators_train <- cbind(pp_dt,

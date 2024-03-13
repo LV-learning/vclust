@@ -214,6 +214,100 @@ validclust <- function(sync_genclust,
   if(customized) used_clusters <- unique(c(reference,comparison))
   if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
   if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
+
+  if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust)){
+    all_clusters <- paste("P",1:class_range, sep="")
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+      dir.create(global_parameters$output_path_prefix)
+    }
+
+    res <- data.frame()
+    output_tmp <- global_parameters$output_path_prefix
+    for(comparison in comparisons){
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+        dir.create(global_parameters$output_path_prefix)
+      }
+      csv_files <- paste(output_tmp, "/", list.files(output_tmp, ".csv$"), sep = "")
+      file.copy(from=csv_files, to=global_parameters$output_path_prefix,
+                overwrite = TRUE, recursive = FALSE,
+                copy.mode = TRUE)
+      tmpRes <- validclust(sync_genclust,
+                 info_genclust,
+                 useobs,
+                 if_CV,
+                 K_fold,
+                 seed_num_kfold,
+                 class_range,
+                 kappa_filter_maxN,
+                 kappa_filter_value,
+                 kappa_filter_results,
+                 validators,
+                 customized,
+                 reference,
+                 comparison = comparison,
+                 if_continuous
+      )
+      global_parameters$output_path_prefix <<- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "valid_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust))
+  {
+    if(length(info_genclust[['cluster_names']]) == 1){
+      all_clusters <- paste("P",1:class_range, sep="")
+    }else{
+      all_clusters <- info_genclust[['cluster_names']]
+    }
+    comparisons <- all_clusters[!all_clusters %in% reference]
+
+
+    if(dir.exists(info_genclust[['output_path_prefix']]) == FALSE){
+      dir.create(info_genclust[['output_path_prefix']])
+    }
+    res <- data.frame()
+    output_tmp <- info_genclust[['output_path_prefix']]
+    for(comparison in comparisons){
+      info_genclust[['output_path_prefix']] <- paste(output_tmp, "/", comparison, "/", sep = "")
+      tmpRes <- validclust(sync_genclust,
+                           info_genclust,
+                           useobs,
+                           if_CV,
+                           K_fold,
+                           seed_num_kfold,
+                           class_range,
+                           kappa_filter_maxN,
+                           kappa_filter_value,
+                           kappa_filter_results,
+                           validators,
+                           customized,
+                           reference,
+                           comparison = comparison,
+                           if_continuous
+      )
+      info_genclust[['output_path_prefix']] <- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "valid_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+
+  }
   label_category1 <- NULL
   repeated_CV = 1
   if_PCD <- FALSE
@@ -224,19 +318,14 @@ validclust <- function(sync_genclust,
   if_listwise_deletion <- FALSE
   train_fraction <- 1
   lr_maxiter <- 100
-  pcd_dropping_pct <- c(0.1,0.1,1)
+  pcd_dropping_pct <- c(0.2,0.2,1)
   for(i in 1:length(validators)){
     validators[[i]]$seed_num['seed_num_kfold'] = seed_num_kfold
   }
 
   if(isTRUE(sync_genclust)){
     if(customized){
-      if(sjmisc::is_empty(comparison)){
-        all_clusters <- paste("P",1:class_range, sep="")
-        comparison <- all_clusters[!all_clusters %in% reference]
-      }else{
-        comparison <- paste(comparison, collapse=",")
-      }
+      comparison <- paste(comparison, collapse=",")
       reference <- paste(reference, collapse=",")
       label_category1 <- c(reference,comparison)
     }
@@ -359,8 +448,8 @@ validclust <- function(sync_genclust,
                     model_spec2 = ifelse(global_parameters$GMM_random_intercept,"random intercept","-"),
                     model_spec3 = ifelse(is_covariates,"covariates","-"),
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -417,8 +506,8 @@ validclust <- function(sync_genclust,
                   model_spec2 = ifelse(global_parameters$GMM_random_intercept,"random intercept","-"),
                   model_spec3 = ifelse(is_covariates,"covariates","-"),
                   n_clusters = n_classes,
-                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                  label_group1 = combination_of_class_probabilities,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                  label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
                   kappa = kappa_mean,
                   kappa_SE = kappa_sd,
@@ -476,8 +565,8 @@ validclust <- function(sync_genclust,
                     model_spec2 = "-",
                     model_spec3 = "-",
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -533,8 +622,8 @@ validclust <- function(sync_genclust,
                   model_spec2 = "-",
                   model_spec3 = "-",
                   n_clusters = n_classes,
-                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                  label_group1 = combination_of_class_probabilities,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                  label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
                   kappa = kappa_mean,
                   kappa_SE = kappa_sd,
@@ -589,8 +678,8 @@ validclust <- function(sync_genclust,
                     model_spec2 = "-",
                     model_spec3 = "-",
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -645,6 +734,7 @@ validclust <- function(sync_genclust,
                   model_spec2 = "-",
                   model_spec3 = "-",
                   n_clusters = n_classes,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
                   cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
                   label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
@@ -787,12 +877,7 @@ validclust <- function(sync_genclust,
     if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(info_genclust[['cluster_names']] %in% comparison), sep = "")
 
     if(customized){
-      if(sjmisc::is_empty(comparison)){
-        all_clusters <- paste("P",1:class_range, sep="")
-        comparison <- all_clusters[!all_clusters %in% reference]
-      }else{
-        comparison <- paste(comparison, collapse=",")
-      }
+      comparison <- paste(comparison, collapse=",")
       reference <- paste(reference, collapse=",")
       label_category1 <- c(reference,comparison)
     }
@@ -810,7 +895,7 @@ validclust <- function(sync_genclust,
     }
     useobs <- useObsSplitter(useobs)
     if(is.null(useobs)==FALSE){
-      print(input_dt)
+      print(head(input_dt))
       text_useobs <- paste("input_dt <- dplyr::filter(input_dt,",useobs,")",sep = "")
       print("text_useobs is:")
       print(text_useobs)
