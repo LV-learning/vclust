@@ -15,7 +15,11 @@ validclust(
   kappa_filter_maxN,
   kappa_filter_value,
   kappa_filter_results,
-  validators
+  validators,
+  customized = F,
+  reference = NULL,
+  comparison = NULL,
+  if_continuous = F
 )
 }
 \arguments{
@@ -52,12 +56,12 @@ The user can choose to use those original names
 by specifying \code{variable_names = NULL}.}
 \item{\code{naString:}}{A string indicates what string is interpreted as NA value
 in the input data.}
-\item{\code{cluster_names: }}{ When \code{sync_genclust = FALSE},
+\item{\code{cluster_names: }}{ A string vector indicates names of clusters.
+When \code{sync_genclust = FALSE},
 the user needs to specify the names of clusters.
-A string vector indicates names of variables from data_path.
 For example, when validating outcome labels based on 3-cluster clustering,
 \code{cluster_names = c("e1","e2","e3")} and when based on 2-cluster clustering,
-\code{cluster_names = c("f1","f2","f3")}. Note that the total should add up to 1.
+\code{cluster_names = c("f1","f2")}. Note that the total should add up to 1.
 That is, \deqn{e1+e2+e3=1} and \deqn{f1+f2=1}
 For example, when using cluster membership in probabilities (soft clustering),
 an individual may have \deqn{e1=0.3, e2=0.1, e3=0.6}, which add up to 1.

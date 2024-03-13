@@ -17,13 +17,16 @@ validator(
   flip_outcome_type = NULL,
   flipped_predictors_variables = NULL,
   flipped_predictors_cluster = NULL,
-  flipped_predictors_pp = NULL,
+  flipped_predictors_pp = FALSE,
+  predictors_names = NULL,
+  predictors_cluster = NULL,
   supervised_model = "logistic",
   logistic = TRUE,
   alpha = 1,
   lambda = 0,
   seed_num = c(seed_num_split = NA, seed_num_kfold = NA, seed_num_supervised_model = NA),
-  validator_source_all_missing = 0
+  validator_source_all_missing = 0,
+  contVarName = NULL
 )
 }
 \value{
