@@ -168,7 +168,8 @@ values in maximum likelihood optimization of GMM.}
 optimizations in maximum likelihood optimization of GMM.}
 
 \item{GMM_ID}{A string specifies the variable name of ID in the input file.
-This ID variable will be included in the final .pp file.}
+This ID variable will be included in the final .pp file. If it is NULL, rownames will
+be used}
 
 \item{GMM_AUXILIARY}{A string vector specifies several additional variables
 which are intended to included in the final .pp file for subsequent analyses.}
