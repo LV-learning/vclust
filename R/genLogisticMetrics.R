@@ -54,13 +54,30 @@ genLogisticMetrics <- function(cvFolds_dt,
                   (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))/
     (1- (sum(gc6pos)/sum(gc6pos+gc6neg)*sum(pCLpos)/sum(pCLpos+pCLneg)+
             (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))
-  # print("####################################################")
+
+  if(is.nan(accgmc12)){
+    accgmc12 = NA
+  }
+  if(is.nan(aucmc12)){
+    aucmc12 = NA
+  }
+  if(is.nan(sensgmc12)){
+    sensgmc12 = NA
+  }
+  if(is.nan(spcgmc12)){
+    spcgmc12 = NA
+  }
+  if(is.nan(kappamc12)){
+    kappamc12 = NA
+  }
+  #print("####################################################")
   # print("c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12) is: ")
-  # print(pCLTN)
-  # print(gc6pos)
+  #print(pCLTN)
+  #print(gc6pos)
   # print(sum(pCLTP+pCLTN)/sum(gc6pos+gc6neg))
   # print((sum(gc6pos)/sum(gc6pos+gc6neg)*sum(pCLpos)/sum(pCLpos+pCLneg)+
   #          (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))
-  # print(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12))
+  #print(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12))
+  #print("####################################################")
   return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res))
 }

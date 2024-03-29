@@ -237,19 +237,137 @@ predclust <- function(sync_genclust,
                       comparison = NULL){ #
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
+  if(customized) used_clusters <- unique(c(reference,comparison))
+  if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
+  if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
+    stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
+  }
+
+  if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
+    all_clusters <- cluster_names
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+      dir.create(global_parameters$output_path_prefix)
+    }
+
+    res <- data.frame()
+    output_tmp <- global_parameters$output_path_prefix
+    for(comparison in comparisons){
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+        dir.create(global_parameters$output_path_prefix)
+      }
+      csv_files <- paste(output_tmp, "/", list.files(output_tmp, ".csv$"), sep = "")
+      file.copy(from=csv_files, to=global_parameters$output_path_prefix,
+                overwrite = TRUE, recursive = FALSE,
+                copy.mode = TRUE)
+      tmpRes <- predclust(sync_genclust,
+                          sync_validclust,
+                          output_path_prefix, #
+                          data_path, #
+                          variable_names, #
+                          naString,
+                          predictors_names,
+                          cluster_names,
+                          label_category1, #
+                          cluster_label_position, #
+                          outcome_obs,
+                          supervised_method, #
+                          glmnet_specs,
+                          seed_numbers, #
+                          useobs, #
+                          listwise_deletion_variables, #
+                          train_fraction, #
+                          if_CV, #
+                          K_fold, #
+                          repeated_CV, #
+                          if_PCD, #
+                          r_PCD, #
+                          lr_maxiter,
+                          customized,
+                          reference,
+                          comparison = comparison)
+      global_parameters$output_path_prefix <<- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "predclust_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & isTRUE(sync_validclust)){
+    stop("Please specify comparison for sync_genclust == FALSE and sync_validclust == TRUE")
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
+    if(length(cluster_names) == 1){
+      all_clusters <- paste("P",1:class_range, sep="")
+    }else{
+      all_clusters <- cluster_names
+    }
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(output_path_prefix) == FALSE){
+      dir.create(output_path_prefix)
+    }
+    res <- data.frame()
+    output_tmp <- output_path_prefix
+
+    for(comparison in comparisons){
+      output_path_prefix <- paste(output_tmp, "/", comparison, "/", sep = "")
+      tmpRes <- predclust(sync_genclust,
+                          sync_validclust,
+                          output_path_prefix, #
+                          data_path, #
+                          variable_names, #
+                          naString,
+                          predictors_names,
+                          cluster_names,
+                          label_category1, #
+                          cluster_label_position, #
+                          outcome_obs,
+                          supervised_method, #
+                          glmnet_specs,
+                          seed_numbers, #
+                          useobs, #
+                          listwise_deletion_variables, #
+                          train_fraction, #
+                          if_CV, #
+                          K_fold, #
+                          repeated_CV, #
+                          if_PCD, #
+                          r_PCD, #
+                          lr_maxiter,
+                          customized,
+                          reference,
+                          comparison = comparison)
+      output_path_prefix <- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "predclust_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }
+
+
   if_continuous = FALSE
   if(outcome_obs$outcome_type == "continuous"){
     if_continuous = TRUE
   }
-  if(isTRUE(sync_genclust) & isTRUE(sync_validclust)){
-    stop("Please refer the manual to handle the case when both sync_genclust and sync_validclust are true")
-  }
+
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
   kappa_results_threshold_final_metrics <- 0.005
   combined_posterior_prob_threshold <- 0.5
   if_listwise_deletion <- FALSE
-  pcd_dropping_pct <- c(0.1,0.1,1)
+  pcd_dropping_pct <- c(0.2,0.2,1)
   seed_num <- seed_numbers
   seed_num['seed_num_PCD'] <- seed_num['seed_num_pcd']
 
@@ -548,7 +666,8 @@ predclust <- function(sync_genclust,
                                                pcd_dropping_pct,
                                                if_CV,
                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                               customized = customized)
+                                               customized = customized,
+                                               used_clusters = used_clusters)
 
         }else{
           res <- dichPseudoByPathAllModelNoPCD(folder_path,
@@ -573,7 +692,8 @@ predclust <- function(sync_genclust,
                                                pcd_dropping_pct,
                                                if_CV,
                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                               customized = customized)
+                                               customized = customized,
+                                               used_clusters = used_clusters)
         }
 
       }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","model based clustering", "model-based clustering","mbc")){
@@ -600,7 +720,8 @@ predclust <- function(sync_genclust,
                                                     pcd_dropping_pct,
                                                     if_CV,
                                                     label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                                    customized = customized)
+                                                    customized = customized,
+                                                    used_clusters = used_clusters)
 
         }else{
           res <- dichPseudoByPathAllModelNoPCDMclust(folder_path,
@@ -625,7 +746,8 @@ predclust <- function(sync_genclust,
                                                      pcd_dropping_pct,
                                                      if_CV,
                                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                                     customized = customized)
+                                                     customized = customized,
+                                                     used_clusters = used_clusters)
         }
 
 
@@ -651,7 +773,9 @@ predclust <- function(sync_genclust,
                                                 optimize_prob_thresh,
                                                 pcd_dropping_pct,
                                                 if_CV,
-                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                customized = customized,
+                                                used_clusters = used_clusters)
         }else{
           res <- dichPseudoByPathAllModelKmeans(folder_path,
                                                 ##model classes
@@ -673,7 +797,9 @@ predclust <- function(sync_genclust,
                                                 optimize_prob_thresh,
                                                 pcd_dropping_pct,
                                                 if_CV,
-                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                                customized = customized,
+                                                used_clusters = used_clusters)
         }
 
 
@@ -878,9 +1004,9 @@ predclust <- function(sync_genclust,
     }
 
     label_category1 <- paste("P", which(cluster_names %in% label_category1), sep = "")
+
     if(!sjmisc::is_empty(reference)) reference <- paste("P", which(cluster_names %in% reference), sep = "")
     if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(cluster_names %in% comparison), sep = "")
-
     if(customized){
       if_PCD <- FALSE
       label_category1 <- reference
@@ -945,8 +1071,6 @@ predclust <- function(sync_genclust,
                                    contVarName = outcome_obs$outcome_continuous))
 
     }
-
-
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
@@ -959,9 +1083,9 @@ predclust <- function(sync_genclust,
       eval(parse(text = text_useobs))
       input_dt <- as.data.frame(input_dt)
     }
-    input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     print("start to run syncF")
     input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
+    print(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))})))
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
         if(if_continuous){
@@ -1149,7 +1273,8 @@ predclust <- function(sync_genclust,
                                      pcd_dropping_pct,
                                      if_CV,
                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                                     customized = customized)
+                                    customized = customized,
+                                    used_clusters = used_clusters)
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
@@ -1239,7 +1364,8 @@ predclust <- function(sync_genclust,
                              pcd_dropping_pct,
                              if_CV,
                              label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
-                             customized = customized)
+                             customized = customized,
+                             used_clusters = used_clusters)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -1298,6 +1424,9 @@ predclust <- function(sync_genclust,
       }
     }else
     {
+      if(customized){
+        input_dt <- input_dt[rowSums(input_dt[,used_clusters, drop=F]) == 1,]
+      }
       if(if_continuous){
         res <- validAllModel_Cat_Cont(cluster_names,
                                        K_fold,
@@ -1315,7 +1444,9 @@ predclust <- function(sync_genclust,
                                        optimize_prob_thresh = 0.5,
                                        pcd_dropping_pct,
                                        if_CV,
-                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                                       label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                                      customized = customized,
+                                      used_clusters = used_clusters)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -1402,7 +1533,9 @@ predclust <- function(sync_genclust,
                                optimize_prob_thresh = 0.5,
                                pcd_dropping_pct,
                                if_CV,
-                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+                               label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
+                               customized = customized,
+                               used_clusters = used_clusters)
       if(train_fraction == 1){
         res <- res %>%
           transmute(Supervised_method = supervised_method,

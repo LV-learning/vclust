@@ -17,7 +17,9 @@ validAllModel_Cat <- function(cluster_names,
                               if_CV,
                               label_category1 = NULL,
                               kappa_filter_threshold = NULL,
-                              kappa_results_threshold = NULL) {
+                              kappa_results_threshold = NULL,
+                              customized = F,
+                              used_clusters = NULL) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -44,9 +46,9 @@ validAllModel_Cat <- function(cluster_names,
   final_roc_res <- data.frame()
   ##import input data
   final_metrics_res <- data.frame()
-  n <- length(cluster_names)
-  pp_dt <- input_dt[,cluster_names]
 
+  pp_dt <- input_dt[,cluster_names]
+  n <- length(cluster_names)
   if (!is.null(kappa_filter_threshold) |
       !is.null(kappa_results_threshold)) {
     use_combs_all <- data.frame()
@@ -91,7 +93,6 @@ validAllModel_Cat <- function(cluster_names,
     print(use_combs)
     if(length(use_combs) != 0) use_combs2 = use_combs
   }
-
   input_dt <- input_dt[,!(names(input_dt) %in% cluster_names)]
   res_n <- dichPseudoByPathAModelNoPCDCategory_syncF(
     pp_dt = pp_dt,
@@ -127,7 +128,7 @@ validAllModel_Cat <- function(cluster_names,
     )
   }
   metrics <- res_n[["metrics"]]
-  metrics$n_classes <- n
+  metrics$n_classes <- ifelse(customized, length(used_clusters), n)
   final_metrics_res <- rbind(final_metrics_res, metrics)
   pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                             res_n[["id_df"]])
@@ -345,7 +346,7 @@ validAllModel_Cat <- function(cluster_names,
                 model_spec2 = "-",
                 model_spec3 = "-",
                 n_clusters = n_classes,
-                cluster_names = paste(cluster_namesbu,collapse = ""),
+                cluster_names = ifelse(customized,paste(used_clusters,collapse = ""), paste(cluster_namesbu,collapse = "")),
                 label_group1 = sapply(final_metrics_res_w_aicbic$combination_of_class_probabilities,FUN=function(x){paste(cluster_namesbu[as.numeric(strsplit(x,"P")[[1]][strsplit(x,"P")[[1]]!=""])],collapse="")}),
                 validator = validation_group,
                 kappa = kappa_mean,

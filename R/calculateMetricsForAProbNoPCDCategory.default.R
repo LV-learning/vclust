@@ -151,7 +151,6 @@ calculateMetricsForAProbNoPCDCategory.default <- function(validator,
     'kappa_m',
     'kappa_d'
   )
-
   res_matrix <- colMeans(res_matrix, na.rm = TRUE)
   return(list(res_matrix, roc_res))
 }

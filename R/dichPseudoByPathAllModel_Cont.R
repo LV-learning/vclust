@@ -58,6 +58,7 @@ dichPseudoByPathAllModel_Cont <- function(folder_path,
   for (n in n_range) {
     ##generate PCD
     pp_dt <- getAProbFromResultPath(folder_path, n)
+    pp_dt <- pp_dt[rownames(input_dt),]
     cat("dt result is ", dim(dt))
     comb_dt <- as.data.frame(allCombOfAModelOpt(pp_dt, n))
     comb_dt[comb_dt > 1] <- 1

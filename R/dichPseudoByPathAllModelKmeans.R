@@ -21,7 +21,9 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
                                            optimize_prob_thresh = 0.5,
                                            pcd_dropping_pct,
                                            if_CV,
-                                           label_category1 = NULL) {
+                                           label_category1 = NULL,
+                                           customized = F,
+                                           used_clusters = NULL) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -85,7 +87,17 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
     print(use_combs_all)
   }
   for (n in n_range) {
+    n_backup <- n
     pp_dt <- getAProbFromResultPath(folder_path, n)
+
+    if(customized){
+      cluster_names <- paste("P", sort(unique(pp_dt[,1])), sep="")
+      n = length(used_clusters)
+      pp_dt <- pp_dt[pp_dt$trajectory_clusters %in% which(cluster_names %in% used_clusters),,drop=FALSE]
+      input_dt <- input_dt[intersect(rownames(input_dt),rownames(pp_dt)),]
+    }
+
+    pp_dt <- pp_dt[rownames(input_dt),,drop=F]
     # dich616_dt <- allCombOfAModelFromCategoryOpt(pp_dt, n)
     # dich616_dt <- dichProbAllCombOfAModelFromCategory(dich616_dt)
     # dich616_dt$n_classes <- n
@@ -142,7 +154,7 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
          }
 
         metrics <- res_n[["metrics"]]
-        metrics$n_classes <- n
+        metrics$n_classes <- n_backup
         final_metrics_res <- rbind(final_metrics_res, metrics)
         pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                   res_n[["id_df"]])
@@ -200,8 +212,9 @@ dichPseudoByPathAllModelKmeans <- function(folder_path,
          )
        }
       metrics <- res_n[["metrics"]]
-      metrics$n_classes <- n
+      metrics$n_classes <- n_backup
       final_metrics_res <- rbind(final_metrics_res, metrics)
+      print(pp_dt)
       pp_dt_and_if_in_validators_train <- cbind(pp_dt,
                                                 res_n[["id_df"]])
       write.csv(

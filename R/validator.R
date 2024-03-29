@@ -80,7 +80,6 @@ validator <- function(validator_cutpoint = NULL,
       i <- strsplit(i," |,")[[1]]
       m <- length(i)
       i <- paste(paste("P",which(predicted_cluster_n %in% i),sep = ""),collapse="")
-      print(i)
       i <- paste("C",
                                              m,
                                              "No",

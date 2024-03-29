@@ -10,7 +10,7 @@ predclust(
   output_path_prefix,
   data_path,
   variable_names,
-  naString,
+  naString = NULL,
   predictors_names,
   cluster_names,
   label_category1,
@@ -27,7 +27,10 @@ predclust(
   repeated_CV,
   if_PCD,
   r_PCD,
-  lr_maxiter
+  lr_maxiter,
+  customized = F,
+  reference = NULL,
+  comparison = NULL
 )
 }
 \arguments{

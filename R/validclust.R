@@ -211,8 +211,103 @@ validclust <- function(sync_genclust,
 ){
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
+  if(customized) used_clusters <- unique(c(reference,comparison))
   if(customized & length(class_range) > 1) stop("The class_range can't have multiple values when customized = TRUE")
   if(customized & sjmisc::is_empty(reference)) stop("Please specify reference for customized = TRUE")
+
+  if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust)){
+    all_clusters <- paste("P",1:class_range, sep="")
+    comparisons <- all_clusters[!all_clusters %in% reference]
+    if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+      dir.create(global_parameters$output_path_prefix)
+    }
+
+    res <- data.frame()
+    output_tmp <- global_parameters$output_path_prefix
+    for(comparison in comparisons){
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      if(dir.exists(global_parameters$output_path_prefix) == FALSE){
+        dir.create(global_parameters$output_path_prefix)
+      }
+      csv_files <- paste(output_tmp, "/", list.files(output_tmp, ".csv$"), sep = "")
+      file.copy(from=csv_files, to=global_parameters$output_path_prefix,
+                overwrite = TRUE, recursive = FALSE,
+                copy.mode = TRUE)
+      tmpRes <- validclust(sync_genclust,
+                 info_genclust,
+                 useobs,
+                 if_CV,
+                 K_fold,
+                 seed_num_kfold,
+                 class_range,
+                 kappa_filter_maxN,
+                 kappa_filter_value,
+                 kappa_filter_results,
+                 validators,
+                 customized,
+                 reference,
+                 comparison = comparison,
+                 if_continuous
+      )
+      global_parameters$output_path_prefix <<- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "valid_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+  }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust))
+  {
+    if(length(info_genclust[['cluster_names']]) == 1){
+      all_clusters <- paste("P",1:class_range, sep="")
+    }else{
+      all_clusters <- info_genclust[['cluster_names']]
+    }
+    comparisons <- all_clusters[!all_clusters %in% reference]
+
+
+    if(dir.exists(info_genclust[['output_path_prefix']]) == FALSE){
+      dir.create(info_genclust[['output_path_prefix']])
+    }
+    res <- data.frame()
+    output_tmp <- info_genclust[['output_path_prefix']]
+    for(comparison in comparisons){
+      info_genclust[['output_path_prefix']] <- paste(output_tmp, "/", comparison, "/", sep = "")
+      tmpRes <- validclust(sync_genclust,
+                           info_genclust,
+                           useobs,
+                           if_CV,
+                           K_fold,
+                           seed_num_kfold,
+                           class_range,
+                           kappa_filter_maxN,
+                           kappa_filter_value,
+                           kappa_filter_results,
+                           validators,
+                           customized,
+                           reference,
+                           comparison = comparison,
+                           if_continuous
+      )
+      info_genclust[['output_path_prefix']] <- output_tmp
+      res <- rbind(res, tmpRes)
+    }
+    write.csv(
+      res,
+      paste(
+        output_tmp,
+        "valid_results.csv",
+        sep = ""
+      )
+    )
+    return(res)
+
+  }
   label_category1 <- NULL
   repeated_CV = 1
   if_PCD <- FALSE
@@ -223,19 +318,14 @@ validclust <- function(sync_genclust,
   if_listwise_deletion <- FALSE
   train_fraction <- 1
   lr_maxiter <- 100
-  pcd_dropping_pct <- c(0.1,0.1,1)
+  pcd_dropping_pct <- c(0.2,0.2,1)
   for(i in 1:length(validators)){
     validators[[i]]$seed_num['seed_num_kfold'] = seed_num_kfold
   }
 
   if(isTRUE(sync_genclust)){
     if(customized){
-      if(sjmisc::is_empty(comparison)){
-        all_clusters <- paste("P",1:class_range, sep="")
-        comparison <- all_clusters[!all_clusters %in% reference]
-      }else{
-        comparison <- paste(comparison, collapse=",")
-      }
+      comparison <- paste(comparison, collapse=",")
       reference <- paste(reference, collapse=",")
       label_category1 <- c(reference,comparison)
     }
@@ -350,15 +440,16 @@ validclust <- function(sync_genclust,
                                                    pcd_dropping_pct,
                                                    if_CV,
                                                    label_category1 = label_category1,
-                                                   customized = customized)
+                                                   customized = customized,
+                                                  used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "GMM",
                     model_spec1 = global_parameters$GMM_trend,
                     model_spec2 = ifelse(global_parameters$GMM_random_intercept,"random intercept","-"),
                     model_spec3 = ifelse(is_covariates,"covariates","-"),
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -407,15 +498,16 @@ validclust <- function(sync_genclust,
                                            pcd_dropping_pct,
                                            if_CV,
                                            label_category1 = label_category1,
-                                           customized = customized)
+                                           customized = customized,
+                                           used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "GMM",
                   model_spec1 = global_parameters$GMM_trend,
                   model_spec2 = ifelse(global_parameters$GMM_random_intercept,"random intercept","-"),
                   model_spec3 = ifelse(is_covariates,"covariates","-"),
                   n_clusters = n_classes,
-                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                  label_group1 = combination_of_class_probabilities,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                  label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
                   kappa = kappa_mean,
                   kappa_SE = kappa_sd,
@@ -439,7 +531,8 @@ validclust <- function(sync_genclust,
       res
 
 
-    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering")){
+    }else if(tolower(model_type) %in% c("mclust", "gaussian mixture model","mbc","model based clustering", "model-based clustering"))
+      {
 
       if(if_continuous){
         res <- dichPseudoByPathAllModelNoPCD_Cont(folder_path,
@@ -464,15 +557,16 @@ validclust <- function(sync_genclust,
                                                   pcd_dropping_pct,
                                                   if_CV,
                                                   label_category1 = label_category1,
-                                                  customized = customized)
+                                                  customized = customized,
+                                                  used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "MBC",
                     model_spec1 = global_parameters$MBCtype,
                     model_spec2 = "-",
                     model_spec3 = "-",
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -520,15 +614,16 @@ validclust <- function(sync_genclust,
                                                  pcd_dropping_pct,
                                                  if_CV,
                                                  label_category1 = label_category1,
-                                                 customized = customized)
+                                                 customized = customized,
+                                                 used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "MBC",
                   model_spec1 = global_parameters$MBCtype,
                   model_spec2 = "-",
                   model_spec3 = "-",
                   n_clusters = n_classes,
-                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                  label_group1 = combination_of_class_probabilities,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                  cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                  label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
                   kappa = kappa_mean,
                   kappa_SE = kappa_sd,
@@ -551,7 +646,8 @@ validclust <- function(sync_genclust,
       )
       res
 
-    }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means")){
+    }else if(tolower(model_type) %in% c("k-means","kmeans","k means","k_means"))
+      {
       if(if_continuous){
         res <- dichPseudoByPathAllModelKmeans_Cont(folder_path,
                                                     ##model classes
@@ -573,15 +669,17 @@ validclust <- function(sync_genclust,
                                                     optimize_prob_thresh = 0.5,
                                                     pcd_dropping_pct,
                                                     if_CV,
-                                                    label_category1)
+                                                    label_category1,
+                                                   customized = customized,
+                                                   used_clusters = used_clusters)
         res <- res %>%
           transmute(model_type = "K-means",
                     model_spec1 = "-",
                     model_spec2 = "-",
                     model_spec3 = "-",
                     n_clusters = n_classes,
-                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
-                    label_group1 = combination_of_class_probabilities,
+                    #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
+                    cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),                    label_group1 = combination_of_class_probabilities,
                     validator = validation_group,
                     MSE = MSE,
                     MSE_SE = MSE_SE,
@@ -627,13 +725,16 @@ validclust <- function(sync_genclust,
                                             optimize_prob_thresh = 0.5,
                                             pcd_dropping_pct,
                                             if_CV,
-                                            label_category1)
+                                            label_category1,
+                                            customized = customized,
+                                            used_clusters = used_clusters)
       res <- res %>%
         transmute(model_type = "K-means",
                   model_spec1 = "-",
                   model_spec2 = "-",
                   model_spec3 = "-",
                   n_clusters = n_classes,
+                  #cluster_names = ifelse(customized, paste(used_clusters, collapse = ""), sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = ""))),
                   cluster_names = sapply(res$n_classes,FUN=function(x)paste(paste("P",1:x,sep=""),collapse = "")),
                   label_group1 = combination_of_class_probabilities,
                   validator = validation_group,
@@ -659,7 +760,8 @@ validclust <- function(sync_genclust,
       res
 
 
-    }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group")){
+    }else if(tolower(model_type) %in% c("O","o", "ogroups", "o groups", "ogroup", "o group"))
+      {
       if(if_continuous){
         res <- dichPseudoByPathAllModelO_Cont(folder_path,
                                                K_fold,
@@ -775,12 +877,7 @@ validclust <- function(sync_genclust,
     if(!sjmisc::is_empty(comparison)) comparison <- paste("P", which(info_genclust[['cluster_names']] %in% comparison), sep = "")
 
     if(customized){
-      if(sjmisc::is_empty(comparison)){
-        all_clusters <- paste("P",1:class_range, sep="")
-        comparison <- all_clusters[!all_clusters %in% reference]
-      }else{
-        comparison <- paste(comparison, collapse=",")
-      }
+      comparison <- paste(comparison, collapse=",")
       reference <- paste(reference, collapse=",")
       label_category1 <- c(reference,comparison)
     }
@@ -798,7 +895,7 @@ validclust <- function(sync_genclust,
     }
     useobs <- useObsSplitter(useobs)
     if(is.null(useobs)==FALSE){
-      print(input_dt)
+      print(head(input_dt))
       text_useobs <- paste("input_dt <- dplyr::filter(input_dt,",useobs,")",sep = "")
       print("text_useobs is:")
       print(text_useobs)
@@ -830,7 +927,8 @@ validclust <- function(sync_genclust,
                              label_category1 = label_category1,
                              kappa_filter_threshold = kappa_filter_threshold,
                              kappa_results_threshold = kappa_results_threshold,
-                             customized = customized)
+                             customized = customized,
+                             used_clusters = used_clusters)
         write.csv(
           res,
           paste(
@@ -861,9 +959,13 @@ validclust <- function(sync_genclust,
                            label_category1 = label_category1,
                            kappa_filter_threshold = kappa_filter_threshold,
                            kappa_results_threshold = kappa_results_threshold,
-                           customized = customized)
+                           customized = customized,
+                           used_clusters = used_clusters)
 
     }else{
+      if(customized){
+        input_dt <- input_dt[rowSums(input_dt[,used_clusters, drop=F]) == 1,]
+      }
       if(if_continuous){
         res <- validAllModel_Cat_Cont(cluster_names = info_genclust[['cluster_names']],
                                  K_fold,
@@ -883,7 +985,9 @@ validclust <- function(sync_genclust,
                                  if_CV,
                                  label_category1 = label_category1,
                                  kappa_filter_threshold = kappa_filter_threshold,
-                                 kappa_results_threshold = kappa_results_threshold)
+                                 kappa_results_threshold = kappa_results_threshold,
+                                 customized = customized,
+                                 used_clusters = used_clusters)
         write.csv(
           res,
           paste(
@@ -912,7 +1016,9 @@ validclust <- function(sync_genclust,
                                if_CV,
                                label_category1 = label_category1,
                                kappa_filter_threshold = kappa_filter_threshold,
-                               kappa_results_threshold = kappa_results_threshold)
+                               kappa_results_threshold = kappa_results_threshold,
+                               customized = customized,
+                               used_clusters = used_clusters)
     }
     write.csv(
       res,

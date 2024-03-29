@@ -20,6 +20,6 @@ inputDataPrepare <- function(data_path,
     names(dt) <- x_names
   }
   dt$original_id <- row.names(dt)
-  print(dt)
+  #print(dt)
   return(dt)
 }
