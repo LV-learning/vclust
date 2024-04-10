@@ -56,6 +56,7 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
   dt_rnames_list <- list()
   dt_rmna_list <- list()
   dt_y_test <- data.frame()
+  mean_sd_dt_all <- data.frame()
   for (v_id in 1:length(validators)) {
     seed_num <- validators[[v_id]]$seed_num
     if(!sjmisc::is_empty(seed_num['seed_num_split'])){
@@ -91,6 +92,7 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
     dt_rmna <- dt_rmna_list[[v_id]]
     print("size validators is:")
     print(nrow(dt_rnames))
+    mean_sd_dt_tmp <- data.frame()
     if (validation_data_fraction != 1) {
       final_metrics <- data.frame()
       train_ind <- train_id_list[[v_id]]
@@ -145,13 +147,27 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
         })
 
 
-        m_res <- m_res[[1]]
-        m_res <- as.data.frame(t(m_res))
+        tryCatch({
+          mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
+          mean_sd_dt$whichSplit <- dich_name
+          mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
+          m_res <- as.data.frame(m_res[[1]][["res_matrix"]])
+        },
+        error = function(e){
+          m_res <<- as.data.frame(t(m_res[[1]]))
+          message("m_res for non continuous")
+        })
+
         m_res$whichSplit <- dich_name
         final_metrics <- rbind(final_metrics, m_res)
 
       }
-
+      tryCatch({
+        mean_sd_dt_tmp$validation_group <- validators_name[v_id]
+      },
+      error = function(e){
+        message("no mean_sd_dt")
+      })
       final_metrics$validation_group <- validators_name[v_id]
       train_id_column_name <-
         paste(validators_name[v_id], "_train_ind", sep = "")
@@ -197,13 +213,25 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
         error = function(e){
           message("no roc for continuous outcome")
         })
-
-        m_res <- m_res[[1]]
-        m_res <- as.data.frame(t(m_res))
+        tryCatch({
+          mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
+          mean_sd_dt$whichSplit <- dich_name
+          mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
+          m_res <- as.data.frame(m_res[[1]][["res_matrix"]])
+        },
+        error = function(e){
+          m_res <<- as.data.frame(t(m_res[[1]]))
+          message("m_res for non continuous")
+        })
         m_res$whichSplit <- dich_name
         final_metrics <- rbind(final_metrics, m_res)
       }
-
+      tryCatch({
+        mean_sd_dt_tmp$validation_group <- validators_name[v_id]
+      },
+      error = function(e){
+        message("no mean_sd_dt")
+      })
       final_metrics$validation_group <- validators_name[v_id]
     }
 
@@ -213,12 +241,19 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
       rownames(pp_dt) %in% dt_rnames
     final_metrics_all_validators <-
       rbind(final_metrics_all_validators, final_metrics)
+    tryCatch({
+      mean_sd_dt_all <- rbind(mean_sd_dt_all, mean_sd_dt_tmp)
+    },
+    error = function(e){
+      message("no mean_sd_dt")
+    })
   }
   names(roc_res)[names(roc_res) == "Group.1"] <- "threshold"
   list(
     id_df = as.data.frame(final_out_list),
     metrics = final_metrics_all_validators,
     rocs = roc_res,
-    dt_y_test = dt_y_test
+    dt_y_test = dt_y_test,
+    mean_sd_dt = mean_sd_dt_all
   )
 }

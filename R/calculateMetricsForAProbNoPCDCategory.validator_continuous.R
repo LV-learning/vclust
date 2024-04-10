@@ -29,7 +29,7 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
     if(!sjmisc::is_empty(seed_num['seed_num_regression_model'])){
       set.seed(seed_num['seed_num_regression_model'])
     }
-
+    mean_sd_dt <- data.frame()
     for (r in 1:repeated_folds_R) {
       MSE = matrix(NA, K_fold, 1)
       RMSE = matrix(NA, K_fold, 1)
@@ -49,6 +49,14 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
             input_and_pp_and_var_df = input_and_pp_and_var_df
           )
         }
+        gsd <- var(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName], na.rm=TRUE)^0.5
+        mean_sd_dt <- rbind(mean_sd_dt, data.frame(repeated = r,
+                                                   kfold = i,
+                                                   mean = metrics_ij[[2]],
+                                                   sd = gsd,
+                                                   n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
+                                                   train_or_test = "not splitted"
+                                                   ))
         metrics_ij <- metrics_ij[[1]]
         MSE[i, 1] <- metrics_ij[1]
         RMSE[i, 1] <- metrics_ij[2]
@@ -145,6 +153,6 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
       'aic_m',
       'aic_d'
     )
-    res_matrix <- colMeans(res_matrix, na.rm = TRUE)
-    return(list(res_matrix))
+    #res_matrix <- colMeans(res_matrix, na.rm = TRUE)
+    return(list(list(res_matrix=res_matrix,mean_sd_dt=mean_sd_dt)))
   }

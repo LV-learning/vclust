@@ -1107,6 +1107,7 @@ predclust <- function(sync_genclust,
                                         pcd_dropping_pct,
                                         if_CV,
                                         label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
@@ -1275,14 +1276,15 @@ predclust <- function(sync_genclust,
                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                     customized = customized,
                                     used_clusters = used_clusters)
+          cluster_names_n = length(cluster_names)
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
                         Supervised_spec1 = "-",
                         Supervised_spec2 = "-",
                         Supervised_spec3 = "-",
-                        Cluster_n = length(cluster_names),
-                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Cluster_n = cluster_names_n,
+                        Cluster_names = cluster_names,
                         Label_category1 = label_group1,
                         Label_position = cluster_label_position,
                         Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1454,7 +1456,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_names = cluster_names,
                       Label_category1 = label_group1,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
