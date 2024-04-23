@@ -18,11 +18,13 @@ new_validator <- function(thresholds,
                           validator_source_all_missing,
                           contVarName){
   if(!sjmisc::is_empty(flip_outcome_type)) stopifnot(is.character(flip_outcome_type) && identical(length(flip_outcome_type), 1L))
-  stopifnot(is.character(validator_variables))
   stopifnot(is.character(validator_type))
+  if(validator_type != "continuous"){
+    stopifnot(is.character(validator_variables))
+    stopifnot(sjmisc::is_empty(signs)|is.character(signs))
+    stopifnot(sjmisc::is_empty(max_min_mean)|is.character(max_min_mean))
+  }
   stopifnot(is.character(supervised_model))
-  stopifnot(sjmisc::is_empty(signs)|is.character(signs))
-  stopifnot(sjmisc::is_empty(max_min_mean)|is.character(max_min_mean))
   stopifnot((length(seed_num) == 3))
   #stopifnot(length(predicted_cluster_combination) <= 1)
   stopifnot(length(predicted_cluster_n) <= 1)
