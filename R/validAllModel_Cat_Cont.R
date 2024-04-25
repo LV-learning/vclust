@@ -190,7 +190,7 @@ validAllModel_Cat_Cont <- function(cluster_names,
       tmpdt$cohend_groups = paste(tmpdt$combination_of_class_prob.x, tmpdt$combination_of_class_prob.y, sep = " VS ")
       tmpdt_kfold = tmpdt[,c("repeated", "kfold", "validation_group", "n_classes", "cohend", "cohend_groups", "train_or_test")] %>%
                group_by(repeated, validation_group, train_or_test, cohend_groups, n_classes) %>%
-               summarise(cohend_kmean = mean(cohend), cohend_var = var(cohend)/dplyr::n())
+               summarise(cohend_kmean = mean(cohend, na.rm=T), cohend_var = var(cohend, na.rm=T)/dplyr::n())
       tmpdt_kfold%>%
         group_by(validation_group, train_or_test, cohend_groups, n_classes) %>%
         summarise(cohend = mean(cohend_kmean), cohend_SE = (mean(cohend_var) + if_else(is.na(var(cohend_kmean)), 0, var(cohend_kmean)))^0.5 )
