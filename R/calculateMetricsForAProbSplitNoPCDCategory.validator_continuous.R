@@ -88,8 +88,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       }else{
         MSE_m <- mean(MSE, na.rm = TRUE)
         MSE_d <-
-          (var(MSE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(MSE[, 1])))) ^
-          .5
+          (var(MSE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(MSE[, 1]))))
       }
       if (sum(is.na(RMSE[, 1])) > K_fold_threshold){
         RMSE_m <- NA
@@ -97,8 +96,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       }else{
         RMSE_m <- mean(RMSE, na.rm = TRUE)
         RMSE_d <-
-          (var(RMSE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(RMSE[, 1])))) ^
-          .5
+          (var(RMSE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(RMSE[, 1]))))
       }
 
       if (sum(is.na(MAE[, 1])) > K_fold_threshold){
@@ -107,8 +105,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       }else{
         MAE_m <- mean(MAE, na.rm = TRUE)
         MAE_d <-
-          (var(MAE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(MAE[, 1])))) ^
-          .5
+          (var(MAE[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(MAE[, 1]))))
       }
       if (sum(is.na(r_square[, 1])) > K_fold_threshold){
         r_square_m <- NA
@@ -116,8 +113,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       }else{
         r_square_m <- mean(r_square, na.rm = TRUE)
         r_square_d <-
-          (var(r_square[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(r_square[, 1])))) ^
-          .5
+          (var(r_square[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(r_square[, 1]))))
       }
       if (sum(is.na(adj_r_square[, 1])) > K_fold_threshold) {
         adj_r_square_m <- NA
@@ -125,8 +121,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       } else{
         adj_r_square_m <- mean(adj_r_square, na.rm = TRUE)
         adj_r_square_d <-
-          (var(adj_r_square[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(adj_r_square[, 1])))) ^
-          .5
+          (var(adj_r_square[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(adj_r_square[, 1]))))
       }
       if (sum(is.na(aic[, 1])) > K_fold_threshold) {
         aic_m <- NA
@@ -134,8 +129,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
       } else{
         aic_m <- mean(aic, na.rm = TRUE)
         aic_d <-
-          (var(aic[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(aic[, 1])))) ^
-          .5
+          (var(aic[, 1], na.rm = TRUE) / c(K_fold - sum(is.na(aic[, 1]))))
       }
       res_vec <-
         c(MSE_m,
@@ -154,6 +148,32 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
     }
     res_matrix <-
       data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
+    names(res_matrix) <- c(
+      'MSE_m',
+      'MSE_d',
+      'RMSE_m',
+      'RMSE_d',
+      'MAE_m',
+      'MAE_d',
+      'r_square_m',
+      'r_square_d',
+      'adj_r_square_m',
+      'adj_r_square_d',
+      'aic_m',
+      'aic_d'
+    )
+    #res_matrix <- colMeans(res_matrix, na.rm = TRUE)
+    print('####')
+    print(colMeans(res_matrix, na.rm = TRUE))
+    print('####')
+    #acc_d <- (mean(acc_d_k,na.rm = TRUE) + var(acc_m_k,na.rm = TRUE))^0.5
+    res_matrix <- res_matrix %>% summarise(MSE_m_m = mean(MSE_m), MSE_d_d = (mean(MSE_d) + if_else(is.na(var(MSE_m)), 0, var(MSE_m)))^0.5,
+                             RMSE_m_m = mean(RMSE_m), RMSE_d_d = (mean(RMSE_d) + if_else(is.na(var(RMSE_m)), 0, var(RMSE_m)))^0.5,
+                             MAE_m_m = mean(MAE_m), MAE_d_d = (mean(MAE_d) + if_else(is.na(var(MAE_m)), 0, var(MAE_m)))^0.5,
+                             r_square_m_m = mean(r_square_m), r_square_d_d = (mean(r_square_d) + if_else(is.na(var(r_square_m)), 0, var(r_square_m)))^0.5,
+                             adj_r_square_m_m = mean(adj_r_square_m), adj_r_square_d_d = (mean(adj_r_square_d) + if_else(is.na(var(adj_r_square_m)), 0, var(adj_r_square_m)))^0.5,
+                             aic_m_m = mean(aic_m), aic_d_d = (mean(aic_d) + if_else(is.na(var(aic_m)), 0, var(aic_m)))^0.5,
+                             )
     names(res_matrix) <- c(
       'MSE_m',
       'MSE_d',
