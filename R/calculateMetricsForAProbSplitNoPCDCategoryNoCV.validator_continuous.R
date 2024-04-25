@@ -18,11 +18,14 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
   input_dt_test <- input_and_pp_and_var_df[!rownames(input_and_pp_and_var_df)%in%train_ind,]
   #print(input_dt_train[,paste("P",1:n,sep = "")])
   ##results with CV
+  input_and_pp_and_var_df$cluster <- categoryVec
   res_roc_train <- data.frame()
   res_roc_test <- data.frame()
   if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
     set.seed(seed_num['seed_num_supervised_model'])
   }
+  mean_sd_dt_train <- data.frame()
+  mean_sd_dt_test <- data.frame()
   input_dt_train$cluster <- cat_vec_train
   input_dt_test$cluster <- cat_vec_test
   if(supervised_model %in% c("linear regression", "lr")){
@@ -30,6 +33,14 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
                                         predictor_part = predictor_part,
                                         input_and_pp_and_var_df = input_dt_train)
   }
+  gsd <- var(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName], na.rm=TRUE)^0.5
+  mean_sd_dt_train <- rbind(mean_sd_dt_train, data.frame(repeated = 1,
+                                                         kfold = 1,
+                                                         mean = metrics_ij[[2]],
+                                                         sd = gsd,
+                                                         n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
+                                                         train_or_test = "train"
+  ))
   metrics_ij <- metrics_ij[[1]]
   MSE <- metrics_ij[1]
   RMSE <- metrics_ij[2]
@@ -59,6 +70,13 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
                                         y_test = input_dt_test[,"variable_start_to_end"],
                                         input_and_pp_and_var_df_test = input_dt_test)
   }
+  gsd <- var(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName], na.rm=TRUE)^0.5
+  mean_sd_dt_test <- rbind(mean_sd_dt_test, data.frame(repeated = 1,
+                                                       kfold = 1,
+                                                       mean = metrics_j[[3]],
+                                                       sd = gsd,
+                                                       n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
+                                                       train_or_test = "test"))
   dt_y_test <- metrics_j[[2]]
   metrics_j <- metrics_j[[1]]
   MSE_test <- metrics_j[1]
@@ -113,5 +131,8 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
                            'aic_d_test'
   )
   res_vec <- c(res_vec, res_vec_test)
-  return(list(res_vec, NULL, dt_y_test))
+  return(list(list(res_matrix=as.data.frame(t(res_vec)),
+                   mean_sd_dt=rbind(mean_sd_dt_train, mean_sd_dt_test)),
+              NULL,
+              dt_y_test))
 }
