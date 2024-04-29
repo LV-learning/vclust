@@ -234,7 +234,8 @@ predclust <- function(sync_genclust,
                       lr_maxiter,
                       customized = F,
                       reference = NULL,
-                      comparison = NULL){ #
+                      comparison = NULL,
+                      cohend_SD = NULL){ #
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(customized) used_clusters <- unique(c(reference,comparison))
@@ -1276,7 +1277,8 @@ predclust <- function(sync_genclust,
                                      if_CV,
                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                     customized = customized,
-                                    used_clusters = used_clusters)
+                                    used_clusters = used_clusters,
+                                    cohend_SD = cohend_SD)
           cluster_names_n = length(cluster_names)
           if(train_fraction == 1){
             res <- res %>%
@@ -1449,7 +1451,8 @@ predclust <- function(sync_genclust,
                                        if_CV,
                                        label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                       customized = customized,
-                                      used_clusters = used_clusters)
+                                      used_clusters = used_clusters,
+                                      cohend_SD = cohend_SD)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,

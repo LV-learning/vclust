@@ -20,7 +20,8 @@ validAllModel_Cont <- function(cluster_names,
                           kappa_filter_threshold = NULL,
                           kappa_results_threshold = NULL,
                           customized = F,
-                          used_clusters = NULL){
+                          used_clusters = NULL,
+                          cohend_SD = NULL){
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -237,7 +238,11 @@ validAllModel_Cont <- function(cluster_names,
       tmpdt = merge(mean_sd_dt[mean_sd_dt$combination_of_class_prob == x[1],],
                     mean_sd_dt[mean_sd_dt$combination_of_class_prob == x[2],],
                     by = c("repeated", "kfold", "validation_group", "n_classes", "train_or_test"))
-      tmpdt$cohend = (tmpdt$mean.x - tmpdt$mean.y)/sqrt((tmpdt$n1s2.x + tmpdt$n1s2.y)/(tmpdt$n.x + tmpdt$n.y - 2))
+      if(customized==T & !is.null(cohend_SD)){
+        tmpdt$cohend = (tmpdt$mean.x - tmpdt$mean.y)/cohend_SD
+      }else{
+        tmpdt$cohend = (tmpdt$mean.x - tmpdt$mean.y)/sqrt((tmpdt$n1s2.x + tmpdt$n1s2.y)/(tmpdt$n.x + tmpdt$n.y - 2))
+      }
       tmpdt$cohend_groups = paste(tmpdt$combination_of_class_prob.x, tmpdt$combination_of_class_prob.y, sep = " VS ")
       tmpdt_kfold = tmpdt[,c("repeated", "kfold", "validation_group", "n_classes", "cohend", "cohend_groups", "train_or_test")] %>%
         group_by(repeated, validation_group, train_or_test, cohend_groups, n_classes) %>%

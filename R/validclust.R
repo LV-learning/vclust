@@ -207,7 +207,8 @@ validclust <- function(sync_genclust,
                        customized = F,
                        reference = NULL,
                        comparison = NULL,
-                       if_continuous = F
+                       if_continuous = F,
+                       cohend_SD = NULL
 ){
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
@@ -928,7 +929,8 @@ validclust <- function(sync_genclust,
                              kappa_filter_threshold = kappa_filter_threshold,
                              kappa_results_threshold = kappa_results_threshold,
                              customized = customized,
-                             used_clusters = used_clusters)
+                             used_clusters = used_clusters,
+                             cohend_SD = cohend_SD)
         write.csv(
           res,
           paste(
@@ -987,7 +989,8 @@ validclust <- function(sync_genclust,
                                  kappa_filter_threshold = kappa_filter_threshold,
                                  kappa_results_threshold = kappa_results_threshold,
                                  customized = customized,
-                                 used_clusters = used_clusters)
+                                 used_clusters = used_clusters,
+                                 cohend_SD = cohend_SD)
         write.csv(
           res,
           paste(
