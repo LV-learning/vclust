@@ -253,6 +253,7 @@ predclust <- function(sync_genclust,
 
     res <- data.frame()
     output_tmp <- global_parameters$output_path_prefix
+    cohend_final <- data.frame()
     for(comparison in comparisons){
       global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
       if(dir.exists(global_parameters$output_path_prefix) == FALSE){
@@ -289,9 +290,27 @@ predclust <- function(sync_genclust,
                           reference,
                           comparison = comparison,
                           cohend_SD = cohend_SD)
+      try({tmp_cohend = read.csv(
+        paste(
+          output_path_prefix,
+          "/cohen's d.csv",
+          sep = ""
+        ),header = TRUE)
+      cohend_final <- rbind(cohend_final, tmp_cohend)
+      }, silent = TRUE)
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
+    print(cohend_final)
+    write.csv(
+      cohend_final,
+      paste(
+        output_tmp,
+        "cohen's d.csv",
+        sep = ""
+      ),
+      row.names = FALSE
+    )
     write.csv(
       res,
       paste(
@@ -319,7 +338,7 @@ predclust <- function(sync_genclust,
     }
     res <- data.frame()
     output_tmp <- output_path_prefix
-
+    cohend_final <- data.frame()
     for(comparison in comparisons){
       output_path_prefix <- paste(output_tmp, "/", comparison, "/", sep = "")
       tmpRes <- predclust(sync_genclust,
@@ -349,9 +368,29 @@ predclust <- function(sync_genclust,
                           reference,
                           comparison = comparison,
                           cohend_SD = cohend_SD)
+      try({tmp_cohend = read.csv(
+        paste(
+          output_path_prefix,
+          "/cohen's d.csv",
+          sep = ""
+        ),header = TRUE)
+      cohend_final <- rbind(cohend_final, tmp_cohend)
+      }, silent = TRUE)
+
       output_path_prefix <- output_tmp
       res <- rbind(res, tmpRes)
+
     }
+    print(cohend_final)
+    write.csv(
+      cohend_final,
+      paste(
+        output_tmp,
+        "cohen's d.csv",
+        sep = ""
+      ),
+      row.names = FALSE
+    )
     write.csv(
       res,
       paste(
