@@ -257,7 +257,7 @@ validAllModel_Cont <- function(cluster_names,
       dt_cohend_final <- rbind(dt_cohend_final, i)
     }
     #print(mean_sd_dt)
-    #print(dt_cohend_final)
+    print(dt_cohend_final)
 
     write.csv(
       dt_cohend_final,
