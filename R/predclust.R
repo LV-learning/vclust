@@ -304,7 +304,11 @@ predclust <- function(sync_genclust,
     stop("Please specify comparison for sync_genclust == FALSE and sync_validclust == TRUE")
   }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
     if(length(cluster_names) == 1){
-      all_clusters <- paste("P",1:class_range, sep="")
+      input_dt_tmp <- inputDataPrepare(data_path = data_path,
+                                   x_names = variable_names,
+                                   naString = naString)
+      all_clusters <- paste("P",1:length(unique(input_dt_tmp[,cluster_names])), sep="")
+      remove(input_dt_tmp)
     }else{
       all_clusters <- cluster_names
     }
