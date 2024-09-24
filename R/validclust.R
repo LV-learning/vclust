@@ -248,7 +248,8 @@ validclust <- function(sync_genclust,
                  customized,
                  reference,
                  comparison = comparison,
-                 if_continuous
+                 if_continuous,
+                 cohend_SD = cohend_SD
       )
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
@@ -293,7 +294,8 @@ validclust <- function(sync_genclust,
                            customized,
                            reference,
                            comparison = comparison,
-                           if_continuous
+                           if_continuous,
+                           cohend_SD = cohend_SD
       )
       info_genclust[['output_path_prefix']] <- output_tmp
       res <- rbind(res, tmpRes)

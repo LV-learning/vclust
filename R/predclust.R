@@ -287,7 +287,8 @@ predclust <- function(sync_genclust,
                           lr_maxiter,
                           customized,
                           reference,
-                          comparison = comparison)
+                          comparison = comparison,
+                          cohend_SD = cohend_SD)
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
@@ -346,7 +347,8 @@ predclust <- function(sync_genclust,
                           lr_maxiter,
                           customized,
                           reference,
-                          comparison = comparison)
+                          comparison = comparison,
+                          cohend_SD = cohend_SD)
       output_path_prefix <- output_tmp
       res <- rbind(res, tmpRes)
     }
