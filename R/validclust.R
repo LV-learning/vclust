@@ -320,9 +320,10 @@ validclust <- function(sync_genclust,
                            if_continuous,
                            cohend_SD = cohend_SD
       )
+
       try({tmp_cohend = read.csv(
         paste(
-          output_path_prefix,
+          info_genclust[['output_path_prefix']],
           "/cohen's d.csv",
           sep = ""
         ),header = TRUE)
