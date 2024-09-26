@@ -27,7 +27,7 @@ devtools::install_github("LV-learning/vclust")
 
 ## Documents  
 
-[Manual](https://lvlearning.sites.stanford.edu/sites/g/files/sbiybj20736/files/media/file/vclust_1.0_manual_0.pdf)  
+[Manual](https://github.com/LV-learning/vclust/blob/comparison/vclust_1.1.pdf)  
 [README](https://github.com/LV-learning/vclust/blob/master/README.md)
 
 ## Reference
