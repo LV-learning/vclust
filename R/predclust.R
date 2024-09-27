@@ -247,6 +247,7 @@ predclust <- function(sync_genclust,
   if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
     all_clusters <- cluster_names
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
     if(dir.exists(global_parameters$output_path_prefix) == FALSE){
       dir.create(global_parameters$output_path_prefix)
     }
@@ -255,7 +256,8 @@ predclust <- function(sync_genclust,
     output_tmp <- global_parameters$output_path_prefix
     cohend_final <- data.frame()
     for(comparison in comparisons){
-      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison_name, "/", sep = "")
       if(dir.exists(global_parameters$output_path_prefix) == FALSE){
         dir.create(global_parameters$output_path_prefix)
       }
@@ -333,6 +335,7 @@ predclust <- function(sync_genclust,
       all_clusters <- cluster_names
     }
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
@@ -340,7 +343,8 @@ predclust <- function(sync_genclust,
     output_tmp <- output_path_prefix
     cohend_final <- data.frame()
     for(comparison in comparisons){
-      output_path_prefix <- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+      output_path_prefix <- paste(output_tmp, "/", comparison_name, "/", sep = "")
       tmpRes <- predclust(sync_genclust,
                           sync_validclust,
                           output_path_prefix, #
