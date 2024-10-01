@@ -329,8 +329,10 @@ predclust <- function(sync_genclust,
       input_dt_tmp <- inputDataPrepare(data_path = data_path,
                                    x_names = variable_names,
                                    naString = naString)
+      input_dt_tmp <- input_dt_tmp[!apply(is.na(input_dt_tmp[,cluster_names,drop=FALSE]),1,all),]
       all_clusters <- paste("P",1:length(unique(input_dt_tmp[,cluster_names])), sep="")
       remove(input_dt_tmp)
+
     }else{
       all_clusters <- cluster_names
     }
