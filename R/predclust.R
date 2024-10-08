@@ -303,16 +303,18 @@ predclust <- function(sync_genclust,
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
-    print(cohend_final)
-    write.csv(
-      cohend_final,
-      paste(
-        output_tmp,
-        "cohen's d.csv",
-        sep = ""
-      ),
-      row.names = FALSE
-    )
+    if(!sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
+    }
     write.csv(
       res,
       paste(
@@ -387,16 +389,18 @@ predclust <- function(sync_genclust,
       res <- rbind(res, tmpRes)
 
     }
-    print(cohend_final)
-    write.csv(
-      cohend_final,
-      paste(
-        output_tmp,
-        "cohen's d.csv",
-        sep = ""
-      ),
-      row.names = FALSE
-    )
+    if(!sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
+    }
     write.csv(
       res,
       paste(
