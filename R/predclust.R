@@ -305,7 +305,7 @@ predclust <- function(sync_genclust,
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
-    if(!sjmisc::is_empty(cohend_final)){
+    if(outcome_obs$outcome_type == "continuous" & !sjmisc::is_empty(cohend_final)){
       print(cohend_final)
       write.csv(
         cohend_final,
@@ -392,7 +392,7 @@ predclust <- function(sync_genclust,
       res <- rbind(res, tmpRes)
 
     }
-    if(!sjmisc::is_empty(cohend_final)){
+    if(outcome_obs$outcome_type == "continuous" & !sjmisc::is_empty(cohend_final)){
       print(cohend_final)
       write.csv(
         cohend_final,

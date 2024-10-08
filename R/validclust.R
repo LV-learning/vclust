@@ -267,7 +267,7 @@ validclust <- function(sync_genclust,
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
-    if(!sjmisc::is_empty(cohend_final)){
+    if(if_continuous & !sjmisc::is_empty(cohend_final)){
       print(cohend_final)
       write.csv(
         cohend_final,
@@ -338,7 +338,7 @@ validclust <- function(sync_genclust,
       info_genclust[['output_path_prefix']] <- output_tmp
       res <- rbind(res, tmpRes)
     }
-    if(!sjmisc::is_empty(cohend_final)){
+    if(if_continuous & !sjmisc::is_empty(cohend_final)){
       print(cohend_final)
       write.csv(
         cohend_final,
