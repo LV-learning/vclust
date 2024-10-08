@@ -1142,7 +1142,7 @@ predclust <- function(sync_genclust,
     print("start to run syncF")
     input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     print(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))})))
-    predictors_names <- c(predictors_names, "cluster")
+    if(cluster_label_position == "predictor") predictors_names <- c(predictors_names, "cluster")
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
         if(if_continuous){
