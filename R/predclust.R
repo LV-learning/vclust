@@ -416,7 +416,7 @@ predclust <- function(sync_genclust,
 
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
-  kappa_results_threshold_final_metrics <- 0.005
+  kappa_results_threshold_final_metrics <- NULL
   combined_posterior_prob_threshold <- 0.5
   if_listwise_deletion <- FALSE
   pcd_dropping_pct <- c(0.2,0.2,1)
