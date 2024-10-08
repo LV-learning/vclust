@@ -292,14 +292,16 @@ predclust <- function(sync_genclust,
                           reference,
                           comparison = comparison,
                           cohend_SD = cohend_SD)
-      try({tmp_cohend = read.csv(
-        paste(
-          output_path_prefix,
-          "/cohen's d.csv",
-          sep = ""
-        ),header = TRUE)
-      cohend_final <- rbind(cohend_final, tmp_cohend)
-      }, silent = TRUE)
+      base::suppressWarnings(
+        try({tmp_cohend = read.csv(
+          paste(
+            output_path_prefix,
+            "/cohen's d.csv",
+            sep = ""
+          ),header = TRUE)
+        cohend_final <- rbind(cohend_final, tmp_cohend)
+        }, silent = TRUE)
+      )
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
     }
@@ -376,15 +378,16 @@ predclust <- function(sync_genclust,
                           reference,
                           comparison = comparison,
                           cohend_SD = cohend_SD)
-      try({tmp_cohend = read.csv(
-        paste(
-          output_path_prefix,
-          "/cohen's d.csv",
-          sep = ""
-        ),header = TRUE)
-      cohend_final <- rbind(cohend_final, tmp_cohend)
-      }, silent = TRUE)
-
+      base::suppressWarnings(
+        try({tmp_cohend = read.csv(
+          paste(
+            output_path_prefix,
+            "/cohen's d.csv",
+            sep = ""
+          ),header = TRUE)
+        cohend_final <- rbind(cohend_final, tmp_cohend)
+        }, silent = TRUE)
+      )
       output_path_prefix <- output_tmp
       res <- rbind(res, tmpRes)
 
