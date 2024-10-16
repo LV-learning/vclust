@@ -1029,7 +1029,16 @@ predclust <- function(sync_genclust,
                   AUC_SE_train = AUC_sd_cv,
                   AUC_SE_test = AUC_sd_test
         )
+      }
+    if(customized){
+      res <- res %>%
+        group_by(group = rep(1:(n()/2), each = 2)) %>%
+        mutate(rank = ifelse(Label_category1 == paste(reference, collapse = ""), 0, 1)) %>%
+        arrange(group, rank) %>%
+        select(-rank,-group)
+      res <- as.data.frame(res)
     }
+
     write.csv(
       res,
       paste(
@@ -1661,7 +1670,14 @@ predclust <- function(sync_genclust,
           )
       }
     }
-
+    if(customized){
+      res <- res %>%
+        group_by(group = rep(1:(n()/2), each = 2)) %>%
+        mutate(rank = ifelse(Label_category1 == paste(reference, collapse = ""), 0, 1)) %>%
+        arrange(group, rank) %>%
+        select(-rank,-group)
+      res <- as.data.frame(res)
+    }
     write.csv(
       res,
       paste(
