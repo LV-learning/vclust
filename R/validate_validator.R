@@ -6,7 +6,7 @@ validate_validator <- function(x){
     stopifnot(identical(length(arguments$validator_variables),1L) )
   }
   ##thresholds should have same length as validator_variables
-  if(!("validator_direct" %in% class(x) | "validator_continuous" %in% class(x))){
+  if(!("validator_direct" %in% class(x)| "validator_flip" %in% class(x) | "validator_continuous" %in% class(x))){
     stopifnot(is.numeric(arguments$thresholds))
     # if(!identical(length(arguments$thresholds),length(arguments$validator_variables))){
     #   stop("thresholds should have same length as validator variables")
