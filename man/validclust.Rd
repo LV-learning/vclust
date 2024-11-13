@@ -19,7 +19,8 @@ validclust(
   customized = F,
   reference = NULL,
   comparison = NULL,
-  if_continuous = F
+  if_continuous = F,
+  cohend_SD = NULL
 )
 }
 \arguments{

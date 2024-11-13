@@ -1,5 +1,5 @@
 #' @importFrom magrittr %>%
-#' @importFrom dplyr group_by summarise if_else arrange desc group_modify ungroup
+#' @importFrom dplyr group_by summarise if_else arrange desc group_modify ungroup select mutate n
 #' @importFrom utils read.csv write.csv
 dichPseudoByPathAllModel <- function(folder_path,
                                      ##model classes
