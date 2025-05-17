@@ -53,6 +53,7 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
 
   aic_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
   aic_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
+  coefficients = data.frame()
 
   for(r in 1:repeated_folds_R){
     MSE = matrix(NA, K_fold, r_pseudo)
@@ -74,6 +75,9 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
                                            input_and_pp_and_var_df = input_dt_train
                                            )
         }
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
         metrics_ij <- metrics_ij[[1]]
         MSE[i, j] <- metrics_ij[1]
         RMSE[i, j] <- metrics_ij[2]
@@ -184,7 +188,8 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
         aic_d)
     res_matrix <- c(res_matrix,res_vec)
   }
-
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
 
   MSE_m_overall=mean(MSE_m_perRepPCD, na.rm = TRUE)
@@ -340,5 +345,5 @@ calculateMetricsForAProbSplit.validator_continuous <- function(validator,
   )
   res_vec <- c(res_matrix,res_vec_test)
 
-  return(list(res_vec, NULL, dt_y_test))
+  return(list(res_vec, NULL, dt_y_test,coefficients=coefficients))
 }

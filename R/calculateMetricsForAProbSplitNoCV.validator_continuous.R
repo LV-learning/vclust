@@ -34,6 +34,7 @@ calculateMetricsForAProbSplitNoCV.validator_continuous <- function(validator,
   r_square = matrix(NA,1,r_pseudo)
   adj_r_square = matrix(NA,1,r_pseudo)
   aic = matrix(NA,1,r_pseudo)
+  coefficients = data.frame()
 
   if(!sjmisc::is_empty(seed_num['seed_num_regression_model'])){
     set.seed(seed_num['seed_num_regression_model'])
@@ -45,7 +46,9 @@ calculateMetricsForAProbSplitNoCV.validator_continuous <- function(validator,
                                           predictor_part = predictor_part,
                                           input_and_pp_and_var_df = input_dt_train)
     }
-
+    coeff_df <- metrics_ij[[3]]
+    coeff_df$covariates <- row.names(coeff_df)
+    coefficients <- rbind(coefficients,coeff_df)
     metrics_ij <- metrics_ij[[1]]
     MSE[1,j] <- metrics_ij[1]
     RMSE[1,j] <- metrics_ij[2]
@@ -54,7 +57,8 @@ calculateMetricsForAProbSplitNoCV.validator_continuous <- function(validator,
     adj_r_square[1,j] <- metrics_ij[5]
     aic[1,j] <- metrics_ij[6]
   }
-
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   if(sum(is.na(MSE[1,])) > r_pseudo_threshold){
     MSE_m <- NA
     MSE_d <- NA
@@ -234,5 +238,5 @@ calculateMetricsForAProbSplitNoCV.validator_continuous <- function(validator,
                            'aic_d_test'
   )
   res_vec <- c(res_vec,res_vec_test)
-  return(list(res_vec,NULL,dt_y_test))
+  return(list(res_vec,NULL,dt_y_test,coefficients=coefficients))
 }

@@ -29,6 +29,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_direct <-
     K_fold_threshold = round(pcd_dropping_pct[2] * K_fold)
     r_threshold = round(pcd_dropping_pct[3] * repeated_folds_R)
     res_roc_train <- data.frame()
+    coefficients = data.frame()
     if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
       set.seed(seed_num['seed_num_supervised_model'])
     }
@@ -74,6 +75,10 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_direct <-
           )
 
         }
+
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
         res_roc_train <- rbind(res_roc_train, metrics_ij[[2]])
         metrics_ij <- metrics_ij[[1]]
         accgmc12[i, 1] <- metrics_ij[1]
@@ -145,6 +150,8 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_direct <-
           kappa_d)
       res_matrix <- c(res_matrix, res_vec)
     }
+    print(coefficients)
+    coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
     res_matrix <-
       data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
     res_roc_train <-
@@ -259,5 +266,6 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_direct <-
     res_vec <- c(res_matrix, res_vec_test)
     res_roc_train$dataset <- "train"
     res_roc_test$dataset <- "test"
-    return(list(res_vec, rbind(res_roc_train, res_roc_test),dt_y_test))
+    return(list(res_vec, rbind(res_roc_train, res_roc_test),dt_y_test,
+                coefficients=coefficients))
   }

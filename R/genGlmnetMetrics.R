@@ -56,5 +56,5 @@ genGlmnetMetrics <- function(cvFolds_dt,
                   (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))/
     (1- (sum(gc6pos)/sum(gc6pos+gc6neg)*sum(pCLpos)/sum(pCLpos+pCLneg)+
            (1-sum(gc6pos)/sum(gc6pos+gc6neg))*(1-sum(pCLpos)/sum(pCLpos+pCLneg))))
-  return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res))
+  return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res, as.data.frame(pCL$beta)))
 }

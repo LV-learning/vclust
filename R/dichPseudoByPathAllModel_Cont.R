@@ -240,7 +240,6 @@ dichPseudoByPathAllModel_Cont <- function(folder_path,
     }
     print("end model")
   }
-  print(final_metrics_res)
 
   #sapply(res_allModel[[2]]$whichSplit,FUN = get_comb_from_whichSplit )
   final_metrics_res$choose_m <-

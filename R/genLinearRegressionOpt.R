@@ -16,5 +16,7 @@ genLinearRegressionOpt <- function(y,
   r_square <- summ_mod$r.squared
   adj_r_square <- summ_mod$adj.r.squared
   aic <- stats::AIC(lmod)
-  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square,aic)))
+  prediction_dt <- data.frame(cluster=dt_y[,"cluster"], prediction=prediction)
+  prediction_dt <- prediction_dt[prediction_dt$cluster != 0,]
+  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square,aic), mean(prediction_dt$prediction,na.rm=T), as.data.frame(summ_mod$coefficients)))
 }

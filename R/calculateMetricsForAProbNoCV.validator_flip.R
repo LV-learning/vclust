@@ -26,6 +26,7 @@ calculateMetricsForAProbNoCV.validator_flip <- function(validator,
   spcgmc12=matrix(NA,1,r_pseudo)
   kappamc12=matrix(NA,1,r_pseudo)
   roc_res <- data.frame()
+  coefficients = data.frame()
   if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
     set.seed(seed_num['seed_num_supervised_model'])
   }
@@ -51,6 +52,9 @@ calculateMetricsForAProbNoCV.validator_flip <- function(validator,
                                           input_and_pp_and_var_df = input_and_pp_and_var_df,
                                           lr_maxiter = lr_maxiter)
     }
+    coeff_df <- metrics_ij[[3]]
+    coeff_df$covariates <- row.names(coeff_df)
+    coefficients <- rbind(coefficients,coeff_df)
     roc_res <- rbind(roc_res,metrics_ij[[2]])
     metrics_ij <- metrics_ij[[1]]
     accgmc12[1,j] <- metrics_ij[1]
@@ -59,6 +63,8 @@ calculateMetricsForAProbNoCV.validator_flip <- function(validator,
     spcgmc12[1,j] <- metrics_ij[4]
     kappamc12[1,j] <- metrics_ij[5]
   }
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   if(sum(is.na(accgmc12[1,])) > r_pseudo_threshold){
     acc_m <- NA
     acc_d <- NA
@@ -107,5 +113,5 @@ calculateMetricsForAProbNoCV.validator_flip <- function(validator,
                       'kappa_m',
                       'kappa_d')
 
-  return(list(res_vec,roc_res))
+  return(list(res_vec,roc_res,coefficients=coefficients))
 }

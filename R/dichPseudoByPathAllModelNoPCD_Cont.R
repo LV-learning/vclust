@@ -34,6 +34,12 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
     dir.create(final_predicted_cluster_res_dir)
   }
 
+  final_predicted_coeff_res_dir <-
+    paste(output_path_prefix, "predicted_coeff_results/", sep = "")
+  if (dir.exists(final_predicted_coeff_res_dir) == FALSE) {
+    dir.create(final_predicted_coeff_res_dir)
+  }
+
   final_pp_if_validators_res_dir <-
     paste(output_path_prefix, "pp_and_if_train_validators/", sep = "")
   if (dir.exists(final_pp_if_validators_res_dir) == FALSE) {
@@ -178,6 +184,20 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
             row.names = FALSE
           )
         }
+
+        if(!sjmisc::is_empty(res_n[["coefficients"]])){
+          write.csv(
+            res_n[["coefficients"]],
+            paste(
+              final_predicted_coeff_res_dir,
+              n,
+              "_classes",
+              ".csv",
+              sep = ""
+            ),
+            row.names = FALSE
+          )
+        }
         metrics <- res_n[["metrics"]]
         metrics$n_classes <- n_backup
         final_metrics_res <- rbind(final_metrics_res, metrics)
@@ -259,6 +279,19 @@ dichPseudoByPathAllModelNoPCD_Cont <- function(folder_path,
           res_n[["dt_y_test"]],
           paste(
             final_predicted_cluster_res_dir,
+            n,
+            "_classes",
+            ".csv",
+            sep = ""
+          ),
+          row.names = FALSE
+        )
+      }
+      if(!sjmisc::is_empty(res_n[["coefficients"]])){
+        write.csv(
+          res_n[["coefficients"]],
+          paste(
+            final_predicted_coeff_res_dir,
             n,
             "_classes",
             ".csv",

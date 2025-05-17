@@ -234,7 +234,11 @@ predclust <- function(sync_genclust,
                       lr_maxiter,
                       customized = F,
                       reference = NULL,
-                      comparison = NULL){ #
+                      comparison = NULL,
+                      cohend_SD = NULL){ #
+  referencetmp <- reference
+  reference <- comparison
+  comparison <- referencetmp
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(customized) used_clusters <- unique(c(reference,comparison))
@@ -246,14 +250,17 @@ predclust <- function(sync_genclust,
   if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
     all_clusters <- cluster_names
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
     if(dir.exists(global_parameters$output_path_prefix) == FALSE){
       dir.create(global_parameters$output_path_prefix)
     }
 
     res <- data.frame()
     output_tmp <- global_parameters$output_path_prefix
+    cohend_final <- data.frame()
     for(comparison in comparisons){
-      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison_name, "/", sep = "")
       if(dir.exists(global_parameters$output_path_prefix) == FALSE){
         dir.create(global_parameters$output_path_prefix)
       }
@@ -286,9 +293,32 @@ predclust <- function(sync_genclust,
                           lr_maxiter,
                           customized,
                           reference,
-                          comparison = comparison)
+                          comparison = comparison,
+                          cohend_SD = cohend_SD)
+      base::suppressWarnings(
+        try({tmp_cohend = read.csv(
+          paste(
+            output_path_prefix,
+            "/cohen's d.csv",
+            sep = ""
+          ),header = TRUE)
+        cohend_final <- rbind(cohend_final, tmp_cohend)
+        }, silent = TRUE)
+      )
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
+    }
+    if(outcome_obs$outcome_type == "continuous" & !sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
     }
     write.csv(
       res,
@@ -303,19 +333,27 @@ predclust <- function(sync_genclust,
     stop("Please specify comparison for sync_genclust == FALSE and sync_validclust == TRUE")
   }else if(customized & sjmisc::is_empty(comparison) & !isTRUE(sync_genclust) & !isTRUE(sync_validclust)){
     if(length(cluster_names) == 1){
-      all_clusters <- paste("P",1:class_range, sep="")
+      input_dt_tmp <- inputDataPrepare(data_path = data_path,
+                                   x_names = variable_names,
+                                   naString = naString)
+      input_dt_tmp <- input_dt_tmp[!apply(is.na(input_dt_tmp[,cluster_names,drop=FALSE]),1,all),]
+      all_clusters <- paste("P",1:length(unique(input_dt_tmp[,cluster_names])), sep="")
+      remove(input_dt_tmp)
+
     }else{
       all_clusters <- cluster_names
     }
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
     if(dir.exists(output_path_prefix) == FALSE){
       dir.create(output_path_prefix)
     }
     res <- data.frame()
     output_tmp <- output_path_prefix
-
+    cohend_final <- data.frame()
     for(comparison in comparisons){
-      output_path_prefix <- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+      output_path_prefix <- paste(output_tmp, "/", comparison_name, "/", sep = "")
       tmpRes <- predclust(sync_genclust,
                           sync_validclust,
                           output_path_prefix, #
@@ -341,9 +379,33 @@ predclust <- function(sync_genclust,
                           lr_maxiter,
                           customized,
                           reference,
-                          comparison = comparison)
+                          comparison = comparison,
+                          cohend_SD = cohend_SD)
+      base::suppressWarnings(
+        try({tmp_cohend = read.csv(
+          paste(
+            output_path_prefix,
+            "/cohen's d.csv",
+            sep = ""
+          ),header = TRUE)
+        cohend_final <- rbind(cohend_final, tmp_cohend)
+        }, silent = TRUE)
+      )
       output_path_prefix <- output_tmp
       res <- rbind(res, tmpRes)
+
+    }
+    if(outcome_obs$outcome_type == "continuous" & !sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
     }
     write.csv(
       res,
@@ -364,7 +426,7 @@ predclust <- function(sync_genclust,
 
   kappa_filter_threshold <- NULL
   kappa_results_threshold <- NULL
-  kappa_results_threshold_final_metrics <- 0.005
+  kappa_results_threshold_final_metrics <- NULL
   combined_posterior_prob_threshold <- 0.5
   if_listwise_deletion <- FALSE
   pcd_dropping_pct <- c(0.2,0.2,1)
@@ -884,8 +946,8 @@ predclust <- function(sync_genclust,
                     MSE_SE_train = MSE_SE_cv,
                     MSE_SE_test = MSE_SE_test,
                     RMSE_train = RMSE_cv,
+                    RMSE_SE_train = RMSE_SE_cv,
                     RMSE_test = RMSE_test,
-                    RMSE_SE_cv = RMSE_SE_cv,
                     RMSE_SE_test = RMSE_SE_test,
                     MAE_train = MAE_cv,
                     MAE_test = MAE_test,
@@ -970,7 +1032,16 @@ predclust <- function(sync_genclust,
                   AUC_SE_train = AUC_sd_cv,
                   AUC_SE_test = AUC_sd_test
         )
+      }
+    if(customized){
+      res <- res %>%
+        group_by(group = rep(1:(n()/2), each = 2)) %>%
+        mutate(rank = ifelse(Label_category1 == paste(reference, collapse = ""), 0, 1)) %>%
+        arrange(group, rank) %>%
+        select(-rank,-group)
+      res <- as.data.frame(res)
     }
+
     write.csv(
       res,
       paste(
@@ -1086,6 +1157,7 @@ predclust <- function(sync_genclust,
     print("start to run syncF")
     input_dt <- input_dt[stats::complete.cases(input_dt[,cluster_names]),]
     print(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))})))
+    if(cluster_label_position == "predictor") predictors_names <- c(predictors_names, "cluster")
     if(!all(apply(input_dt[,cluster_names],2,FUN = function(x){all(x %in% c(0,1))}))){
       if(if_PCD){
         if(if_continuous){
@@ -1107,6 +1179,7 @@ predclust <- function(sync_genclust,
                                         pcd_dropping_pct,
                                         if_CV,
                                         label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
@@ -1196,14 +1269,15 @@ predclust <- function(sync_genclust,
                                 pcd_dropping_pct,
                                 if_CV,
                                 label_category1 = if(customized){c(label_category1,comparison)}else{label_category1})
+        cluster_namesu <- cluster_names
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
                       Supervised_spec1 = "-",
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
-                      Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_n = length(cluster_namesu),
+                      Cluster_names = paste(cluster_namesu,collapse = ""),
                       Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1225,8 +1299,8 @@ predclust <- function(sync_genclust,
                       Supervised_spec1 = "-",
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
-                      Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_n = length(cluster_namesu),
+                      Cluster_names = paste(cluster_namesu,collapse = ""),
                       Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1274,15 +1348,17 @@ predclust <- function(sync_genclust,
                                      if_CV,
                                      label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                     customized = customized,
-                                    used_clusters = used_clusters)
+                                    used_clusters = used_clusters,
+                                    cohend_SD = cohend_SD)
+          cluster_names_n = length(cluster_names)
           if(train_fraction == 1){
             res <- res %>%
               transmute(Supervised_method = supervised_method,
                         Supervised_spec1 = "-",
                         Supervised_spec2 = "-",
                         Supervised_spec3 = "-",
-                        Cluster_n = length(cluster_names),
-                        Cluster_names = paste(cluster_names,collapse = ""),
+                        Cluster_n = cluster_names_n,
+                        Cluster_names = cluster_names,
                         Label_category1 = label_group1,
                         Label_position = cluster_label_position,
                         Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1317,6 +1393,7 @@ predclust <- function(sync_genclust,
                         MSE_SE_test = MSE_SE_test,
                         RMSE_train = RMSE_cv,
                         RMSE_test = RMSE_test,
+                        RMSE_SE_train = RMSE_SE_train,
                         RMSE_SE_test = RMSE_SE_test,
                         MAE_train = MAE_cv,
                         MAE_test = MAE_test,
@@ -1366,14 +1443,15 @@ predclust <- function(sync_genclust,
                              label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                              customized = customized,
                              used_clusters = used_clusters)
+        cluster_namesu <- cluster_names
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
                       Supervised_spec1 = "-",
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
-                      Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_n = length(cluster_namesu),
+                      Cluster_names = paste(cluster_namesu,collapse = ""),
                       Label_category1 = label_group1,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1394,8 +1472,8 @@ predclust <- function(sync_genclust,
                       Supervised_spec1 = "-",
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
-                      Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_n = length(cluster_namesu),
+                      Cluster_names = paste(cluster_namesu,collapse = ""),
                       Label_category1 = combination_of_class_probabilities,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1446,7 +1524,8 @@ predclust <- function(sync_genclust,
                                        if_CV,
                                        label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                       customized = customized,
-                                      used_clusters = used_clusters)
+                                      used_clusters = used_clusters,
+                                      cohend_SD = cohend_SD)
         if(train_fraction == 1){
           res <- res %>%
             transmute(Supervised_method = supervised_method,
@@ -1454,7 +1533,7 @@ predclust <- function(sync_genclust,
                       Supervised_spec2 = "-",
                       Supervised_spec3 = "-",
                       Cluster_n = length(cluster_names),
-                      Cluster_names = paste(cluster_names,collapse = ""),
+                      Cluster_names = cluster_names,
                       Label_category1 = label_group1,
                       Label_position = cluster_label_position,
                       Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1487,6 +1566,7 @@ predclust <- function(sync_genclust,
                       MSE_SE_train = MSE_SE_cv,
                       MSE_SE_test = MSE_SE_test,
                       RMSE_train = RMSE_cv,
+                      RMSE_SE_train = RMSE_SE_cv,
                       RMSE_test = RMSE_test,
                       RMSE_SE_test = RMSE_SE_test,
                       MAE_train = MAE_cv,
@@ -1536,14 +1616,15 @@ predclust <- function(sync_genclust,
                                label_category1 = if(customized){c(label_category1,comparison)}else{label_category1},
                                customized = customized,
                                used_clusters = used_clusters)
+      cluster_namesu <- cluster_names
       if(train_fraction == 1){
         res <- res %>%
           transmute(Supervised_method = supervised_method,
                     Supervised_spec1 = "-",
                     Supervised_spec2 = "-",
                     Supervised_spec3 = "-",
-                    Cluster_n = length(cluster_names),
-                    Cluster_names = paste(cluster_names,collapse = ""),
+                    Cluster_n = length(cluster_namesu),
+                    Cluster_names = paste(cluster_namesu,collapse = ""),
                     Label_category1 = label_group1,
                     Label_position = cluster_label_position,
                     Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1564,8 +1645,8 @@ predclust <- function(sync_genclust,
                     Supervised_spec1 = "-",
                     Supervised_spec2 = "-",
                     Supervised_spec3 = "-",
-                    Cluster_n = length(cluster_names),
-                    Cluster_names = paste(cluster_names,collapse = ""),
+                    Cluster_n = length(cluster_namesu),
+                    Cluster_names = paste(cluster_namesu,collapse = ""),
                     Label_category1 = combination_of_class_probabilities,
                     Label_position = cluster_label_position,
                     Predictors = ifelse(length(predictors_names) < 2, predictors_names, paste(predictors_names[1:2],collapse = " ")),
@@ -1592,7 +1673,14 @@ predclust <- function(sync_genclust,
           )
       }
     }
-
+    if(customized){
+      res <- res %>%
+        group_by(group = rep(1:(n()/2), each = 2)) %>%
+        mutate(rank = ifelse(Label_category1 == paste(reference, collapse = ""), 0, 1)) %>%
+        arrange(group, rank) %>%
+        select(-rank,-group)
+      res <- as.data.frame(res)
+    }
     write.csv(
       res,
       paste(

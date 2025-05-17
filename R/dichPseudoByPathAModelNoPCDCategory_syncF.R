@@ -23,6 +23,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
   dt_rnames_list <- list()
   dt_rmna_list <- list()
   dt_y_test <- data.frame()
+  mean_sd_dt_all <- data.frame()
   for (v_id in 1:length(validators)) {
     seed_num <- validators[[v_id]]$seed_num
     if(!sjmisc::is_empty(seed_num['seed_num_split'])){
@@ -53,8 +54,10 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
     dt_rmna_list[[v_id]] <- dt_rmna
   }
   roc_res <- data.frame()
+  coefficients <- data.frame()
   print(length(validators))
   for (v_id in 1:length(validators)) {
+
     seed_num <- validators[[v_id]]$seed_num
     dt_rnames <- dt_rnames_list[[v_id]]
     dt_rmna <- dt_rmna_list[[v_id]]
@@ -83,6 +86,9 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
       }
 
     }
+
+
+    mean_sd_dt_tmp <- data.frame()
     if (validation_data_fraction != 1) {
       final_metrics <- data.frame()
       train_ind <- train_id_list[[v_id]]
@@ -110,6 +116,8 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
                   n = n,
                   pcd_dropping_pct = pcd_dropping_pct
                 )
+
+
             } else{
               m_res <-
                 calculateMetricsForAProbSplitNoPCDCategoryNoCV(
@@ -142,23 +150,54 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
             error = function(e){
               message("no roc for continuous outcome")
             })
+            tryCatch({
+              coef_tmp <- m_res[[1]][['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
 
-
-            m_res <- m_res[[1]]
-            m_res <- as.data.frame(t(m_res))
+            })
+            tryCatch({
+              coef_tmp <- m_res[['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+              message("no coefficients outputs NoPCD syncF")
+            })
+            tryCatch({
+              mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
+              mean_sd_dt$whichSplit <- names(mComb)[aChoiceProb]
+              mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
+              m_res <- as.data.frame(m_res[[1]][["res_matrix"]])
+            },
+            error = function(e){
+              m_res <<- as.data.frame(t(m_res[[1]]))
+              message("m_res for non continuous")
+            })
             m_res$whichSplit <- names(mComb)[aChoiceProb]
             final_metrics <- rbind(final_metrics, m_res)
           }
         }
 
       }
-
+      tryCatch({
+        mean_sd_dt_tmp$validation_group <- validators_name[v_id]
+      },
+      error = function(e){
+        message("no mean_sd_dt")
+      })
       final_metrics$validation_group <- validators_name[v_id]
+
       train_id_column_name <-
         paste(validators_name[v_id], "_train_ind", sep = "")
       final_out_list[[train_id_column_name]] <-
         rownames(pp_dt) %in% train_ind
-    } else{
+    } else
+      {
       final_metrics <- data.frame()
       for (mComb in dt_comb) {
         rownames(mComb) <- dt_rnames
@@ -195,7 +234,6 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
                   pcd_dropping_pct = pcd_dropping_pct
                 )
             }
-
             tryCatch({
               roc_tmp <- m_res[[2]]
               roc_tmp$whichSplit <- names(mComb)[aChoiceProb]
@@ -205,14 +243,46 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
             error = function(e){
               message("no roc for continuous outcome")
             })
-            m_res <- m_res[[1]]
-            m_res <- as.data.frame(t(m_res))
+            tryCatch({
+              coef_tmp <- m_res[[1]][['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+
+            })
+            tryCatch({
+              coef_tmp <- m_res[['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+              message("no coefficients outputs NoPCD syncF")
+            })
+            tryCatch({
+              mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
+              mean_sd_dt$whichSplit <- names(mComb)[aChoiceProb]
+              mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
+              m_res <- as.data.frame(m_res[[1]][["res_matrix"]])
+            },
+            error = function(e){
+              m_res <<- as.data.frame(t(m_res[[1]]))
+              message("m_res for non continuous")
+            })
             m_res$whichSplit <- names(mComb)[aChoiceProb]
             final_metrics <- rbind(final_metrics, m_res)
           }
         }
 
       }
+      tryCatch({
+        mean_sd_dt_tmp$validation_group <- validators_name[v_id]
+      },
+      error = function(e){
+        message("no mean_sd_dt")
+      })
 
       final_metrics$validation_group <- validators_name[v_id]
     }
@@ -223,12 +293,21 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
       rownames(pp_dt) %in% dt_rnames
     final_metrics_all_validators <-
       rbind(final_metrics_all_validators, final_metrics)
+    tryCatch({
+      mean_sd_dt_all <- rbind(mean_sd_dt_all, mean_sd_dt_tmp)
+    },
+    error = function(e){
+      message("no mean_sd_dt")
+    })
+
   }
   names(roc_res)[names(roc_res) == "Group.1"] <- "threshold"
   list(
     id_df = as.data.frame(final_out_list),
     metrics = final_metrics_all_validators,
     rocs = roc_res,
-    dt_y_test = dt_y_test
+    dt_y_test = dt_y_test,
+    mean_sd_dt = mean_sd_dt_all,
+    coefficients = coefficients
   )
 }

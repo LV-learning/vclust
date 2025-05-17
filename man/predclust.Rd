@@ -30,7 +30,8 @@ predclust(
   lr_maxiter,
   customized = F,
   reference = NULL,
-  comparison = NULL
+  comparison = NULL,
+  cohend_SD = NULL
 )
 }
 \arguments{

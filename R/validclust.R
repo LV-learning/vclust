@@ -207,8 +207,12 @@ validclust <- function(sync_genclust,
                        customized = F,
                        reference = NULL,
                        comparison = NULL,
-                       if_continuous = F
+                       if_continuous = F,
+                       cohend_SD = NULL
 ){
+  referencetmp <- reference
+  reference <- comparison
+  comparison <- referencetmp
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
   if(customized) used_clusters <- unique(c(reference,comparison))
@@ -218,14 +222,18 @@ validclust <- function(sync_genclust,
   if(customized & sjmisc::is_empty(comparison) & isTRUE(sync_genclust)){
     all_clusters <- paste("P",1:class_range, sep="")
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
+
     if(dir.exists(global_parameters$output_path_prefix) == FALSE){
       dir.create(global_parameters$output_path_prefix)
     }
 
     res <- data.frame()
     output_tmp <- global_parameters$output_path_prefix
+    cohend_final <- data.frame()
     for(comparison in comparisons){
-      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+      global_parameters$output_path_prefix <<- paste(output_tmp, "/", comparison_name, "/", sep = "")
       if(dir.exists(global_parameters$output_path_prefix) == FALSE){
         dir.create(global_parameters$output_path_prefix)
       }
@@ -247,10 +255,32 @@ validclust <- function(sync_genclust,
                  customized,
                  reference,
                  comparison = comparison,
-                 if_continuous
+                 if_continuous,
+                 cohend_SD = cohend_SD
       )
+      try({tmp_cohend = read.csv(
+        paste(
+          output_path_prefix,
+          "/cohen's d.csv",
+          sep = ""
+        ),header = TRUE)
+      cohend_final <- rbind(cohend_final, tmp_cohend)
+      }, silent = TRUE)
+
       global_parameters$output_path_prefix <<- output_tmp
       res <- rbind(res, tmpRes)
+    }
+    if(if_continuous & !sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
     }
     write.csv(
       res,
@@ -269,6 +299,7 @@ validclust <- function(sync_genclust,
       all_clusters <- info_genclust[['cluster_names']]
     }
     comparisons <- all_clusters[!all_clusters %in% reference]
+    comparisons <- unlist(lapply(1:length(comparisons), function(m) combn(comparisons, m, simplify = FALSE)), recursive=FALSE)
 
 
     if(dir.exists(info_genclust[['output_path_prefix']]) == FALSE){
@@ -276,8 +307,11 @@ validclust <- function(sync_genclust,
     }
     res <- data.frame()
     output_tmp <- info_genclust[['output_path_prefix']]
+    cohend_final <- data.frame()
     for(comparison in comparisons){
-      info_genclust[['output_path_prefix']] <- paste(output_tmp, "/", comparison, "/", sep = "")
+      comparison_name = paste(comparison, collapse = "")
+
+      info_genclust[['output_path_prefix']] <- paste(output_tmp, "/", comparison_name, "/", sep = "")
       tmpRes <- validclust(sync_genclust,
                            info_genclust,
                            useobs,
@@ -292,10 +326,32 @@ validclust <- function(sync_genclust,
                            customized,
                            reference,
                            comparison = comparison,
-                           if_continuous
+                           if_continuous,
+                           cohend_SD = cohend_SD
       )
+
+      try({tmp_cohend = read.csv(
+        paste(
+          info_genclust[['output_path_prefix']],
+          "/cohen's d.csv",
+          sep = ""
+        ),header = TRUE)
+      cohend_final <- rbind(cohend_final, tmp_cohend)
+      }, silent = TRUE)
       info_genclust[['output_path_prefix']] <- output_tmp
       res <- rbind(res, tmpRes)
+    }
+    if(if_continuous & !sjmisc::is_empty(cohend_final)){
+      print(cohend_final)
+      write.csv(
+        cohend_final,
+        paste(
+          output_tmp,
+          "cohen's d.csv",
+          sep = ""
+        ),
+        row.names = FALSE
+      )
     }
     write.csv(
       res,
@@ -928,7 +984,8 @@ validclust <- function(sync_genclust,
                              kappa_filter_threshold = kappa_filter_threshold,
                              kappa_results_threshold = kappa_results_threshold,
                              customized = customized,
-                             used_clusters = used_clusters)
+                             used_clusters = used_clusters,
+                             cohend_SD = cohend_SD)
         write.csv(
           res,
           paste(
@@ -987,7 +1044,8 @@ validclust <- function(sync_genclust,
                                  kappa_filter_threshold = kappa_filter_threshold,
                                  kappa_results_threshold = kappa_results_threshold,
                                  customized = customized,
-                                 used_clusters = used_clusters)
+                                 used_clusters = used_clusters,
+                                 cohend_SD = cohend_SD)
         write.csv(
           res,
           paste(

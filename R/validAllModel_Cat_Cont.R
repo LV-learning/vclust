@@ -19,7 +19,9 @@ validAllModel_Cat_Cont <- function(cluster_names,
                               kappa_filter_threshold = NULL,
                               kappa_results_threshold = NULL,
                               customized = F,
-                              used_clusters = NULL) {
+                              used_clusters = NULL,
+                              cohend_SD = NULL
+                              ) {
   # final_dich_res_dir <-
   #   paste(output_path_prefix, "dich_without_PCD_results/", sep = "")
   # if (dir.exists(final_dich_res_dir) == FALSE) {
@@ -31,6 +33,13 @@ validAllModel_Cat_Cont <- function(cluster_names,
   if (dir.exists(final_pp_if_validators_res_dir) == FALSE) {
     dir.create(final_pp_if_validators_res_dir)
   }
+
+  final_predicted_coeff_res_dir <-
+    paste(output_path_prefix, "predicted_coeff_results/", sep = "")
+  if (dir.exists(final_predicted_coeff_res_dir) == FALSE) {
+    dir.create(final_predicted_coeff_res_dir)
+  }
+
   final_roc_res_dir <-
     paste(output_path_prefix, "roc_data/", sep = "")
   if (dir.exists(final_roc_res_dir) == FALSE) {
@@ -46,7 +55,8 @@ validAllModel_Cat_Cont <- function(cluster_names,
   final_roc_res <- data.frame()
   ##import input data
   final_metrics_res <- data.frame()
-  n <- length(used_clusters)
+  n <- length(cluster_names)
+
   pp_dt <- input_dt[,cluster_names]
 
   if (!is.null(kappa_filter_threshold) |
@@ -159,7 +169,6 @@ validAllModel_Cat_Cont <- function(cluster_names,
     use_combinations = use_combs2,
     label_category1 = label_category1
   )
-
   if(!sjmisc::is_empty(res_n[["dt_y_test"]])){
     write.csv(
       res_n[["dt_y_test"]],
@@ -173,7 +182,66 @@ validAllModel_Cat_Cont <- function(cluster_names,
       row.names = FALSE
     )
   }
+  if(!sjmisc::is_empty(res_n[["coefficients"]])){
+    write.csv(
+      res_n[["coefficients"]],
+      paste(
+        final_predicted_coeff_res_dir,
+        n,
+        "_classes",
+        ".csv",
+        sep = ""
+      ),
+      row.names = FALSE
+    )
+  }
   metrics <- res_n[["metrics"]]
+  mean_sd_dt <- res_n[["mean_sd_dt"]]
+  mean_sd_dt$n_classes <- n
+
+  mean_sd_dt$n1s2 <- (mean_sd_dt$n - 1) * (mean_sd_dt$sd ^ 2)
+  mean_sd_dt$combination_of_class_prob <-
+    sapply(mean_sd_dt$whichSplit, FUN = get_comb_from_whichSplit)
+
+  if(length(unique(mean_sd_dt$combination_of_class_prob)) > 1){
+    dt_cohend <- apply(combn(unique(mean_sd_dt$combination_of_class_prob),2), 2, FUN = function(x){
+      tmpdt = merge(mean_sd_dt[mean_sd_dt$combination_of_class_prob == x[1],],
+                    mean_sd_dt[mean_sd_dt$combination_of_class_prob == x[2],],
+                    by = c("repeated", "kfold", "validation_group", "n_classes", "train_or_test"))
+      if(customized==T & !is.null(cohend_SD)){
+        tmpdt$cohend = (tmpdt$mean.x - tmpdt$mean.y)/cohend_SD
+      }else{
+        tmpdt$cohend = (tmpdt$mean.x - tmpdt$mean.y)/sqrt((tmpdt$n1s2.x + tmpdt$n1s2.y)/(tmpdt$n.x + tmpdt$n.y - 2))
+      }
+      tmpdt$cohend_groups = paste(tmpdt$combination_of_class_prob.x, tmpdt$combination_of_class_prob.y, sep = " VS ")
+      tmpdt_kfold = tmpdt[,c("repeated", "kfold", "validation_group", "n_classes", "cohend", "cohend_groups", "train_or_test")] %>%
+               group_by(repeated, validation_group, train_or_test, cohend_groups, n_classes) %>%
+               summarise(cohend_kmean = mean(cohend, na.rm=T), cohend_var = var(cohend, na.rm=T)/dplyr::n())
+      tmpdt_kfold%>%
+        group_by(validation_group, train_or_test, cohend_groups, n_classes) %>%
+        summarise(cohend = mean(cohend_kmean), cohend_SE = (mean(cohend_var) + if_else(is.na(var(cohend_kmean)), 0, var(cohend_kmean)))^0.5 )
+      #auc_d <- (mean(auc_d_k,na.rm = TRUE) + var(auc_m_k,na.rm = TRUE))^0.5
+    })
+    dt_cohend_final <- data.frame()
+    for(i in dt_cohend){
+      dt_cohend_final <- rbind(dt_cohend_final, i)
+    }
+    #print(mean_sd_dt)
+    print(dt_cohend_final)
+
+    write.csv(
+      dt_cohend_final,
+      paste(
+        output_path_prefix,
+        "/cohen's d.csv",
+        sep = ""
+      ),
+      row.names = FALSE
+    )
+
+
+  }
+
   metrics$n_classes <- ifelse(customized, length(used_clusters), n)
   final_metrics_res <- rbind(final_metrics_res, metrics)
   pp_dt_and_if_in_validators_train <- cbind(pp_dt,
@@ -190,6 +258,7 @@ validAllModel_Cat_Cont <- function(cluster_names,
     row.names = FALSE
   )
 
+
   #sapply(res_allModel[[2]]$whichSplit,FUN = get_comb_from_whichSplit )
   final_metrics_res$choose_m <-
     sapply(final_metrics_res$whichSplit, FUN = get_choose_m_from_whichSplit)
@@ -197,7 +266,6 @@ validAllModel_Cat_Cont <- function(cluster_names,
     sapply(final_metrics_res$whichSplit, FUN = get_num_from_whichSplit)
   final_metrics_res$combination_of_class_prob <-
     sapply(final_metrics_res$whichSplit, FUN = get_comb_from_whichSplit)
-
   if (validation_data_fraction != 1) {
     names(final_metrics_res) <-
       c(
