@@ -30,5 +30,5 @@ genLinearRegression <- function(cvFolds_dt,
 
   prediction_dt <- data.frame(cluster=dt_y[vset,"cluster"], prediction=prediction)
   prediction_dt <- prediction_dt[prediction_dt$cluster != 0,]
-  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square,aic), mean(prediction_dt$prediction,na.rm=T)))
+  return(list(c(MSE, RMSE, MAE, r_square, adj_r_square,aic), mean(prediction_dt$prediction,na.rm=T), as.data.frame(summ_mod$coefficients)))
 }

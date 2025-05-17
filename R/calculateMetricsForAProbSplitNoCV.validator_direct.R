@@ -31,6 +31,7 @@ calculateMetricsForAProbSplitNoCV.validator_direct <- function(validator,
   kappamc12=matrix(NA,1,r_pseudo)
   res_roc_train <- data.frame()
   res_roc_test <- data.frame()
+  coefficients = data.frame()
   if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
     set.seed(seed_num['seed_num_supervised_model'])
   }
@@ -49,6 +50,9 @@ calculateMetricsForAProbSplitNoCV.validator_direct <- function(validator,
                                           input_and_pp_and_var_df = input_and_pp_and_var_df[train_ind,],
                                           lr_maxiter = lr_maxiter)
     }
+    coeff_df <- metrics_ij[[3]]
+    coeff_df$covariates <- row.names(coeff_df)
+    coefficients <- rbind(coefficients,coeff_df)
     res_roc_train <- rbind(res_roc_train, metrics_ij[[2]])
     metrics_ij <- metrics_ij[[1]]
     accgmc12[1,j] <- metrics_ij[1]
@@ -57,6 +61,8 @@ calculateMetricsForAProbSplitNoCV.validator_direct <- function(validator,
     spcgmc12[1,j] <- metrics_ij[4]
     kappamc12[1,j] <- metrics_ij[5]
   }
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   res_roc_train <- aggregate(res_roc_train[,c("TPR","FPR")],by=list(res_roc_train$threshold),mean)
 
   if(sum(is.na(accgmc12[1,])) > r_pseudo_threshold){
@@ -202,5 +208,5 @@ calculateMetricsForAProbSplitNoCV.validator_direct <- function(validator,
   res_vec <- c(res_vec,res_vec_test)
   res_roc_train$dataset <- "train"
   res_roc_test$dataset <- "test"
-  return(list(res_vec, rbind(res_roc_train,res_roc_test), dt_y_test))
+  return(list(res_vec, rbind(res_roc_train,res_roc_test), dt_y_test,coefficients=coefficients))
 }

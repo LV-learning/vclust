@@ -26,6 +26,8 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
   }
   mean_sd_dt_train <- data.frame()
   mean_sd_dt_test <- data.frame()
+  coefficients = data.frame()
+
   input_dt_train$cluster <- cat_vec_train
   input_dt_test$cluster <- cat_vec_test
   if(supervised_model %in% c("linear regression", "lr")){
@@ -41,6 +43,11 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
                                                          n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
                                                          train_or_test = "train"
   ))
+  coeff_df <- metrics_ij[[3]]
+  coeff_df$covariates <- row.names(coeff_df)
+  coefficients <- rbind(coefficients,coeff_df)
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   metrics_ij <- metrics_ij[[1]]
   MSE <- metrics_ij[1]
   RMSE <- metrics_ij[2]
@@ -132,7 +139,8 @@ calculateMetricsForAProbSplitNoPCDCategoryNoCV.validator_continuous <- function(
   )
   res_vec <- c(res_vec, res_vec_test)
   return(list(list(res_matrix=as.data.frame(t(res_vec)),
-                   mean_sd_dt=rbind(mean_sd_dt_train, mean_sd_dt_test)),
+                   mean_sd_dt=rbind(mean_sd_dt_train, mean_sd_dt_test),
+                   coefficients=coefficients),
               NULL,
               dt_y_test))
 }

@@ -30,6 +30,7 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
       set.seed(seed_num['seed_num_regression_model'])
     }
     mean_sd_dt <- data.frame()
+    coefficients = data.frame()
     for (r in 1:repeated_folds_R) {
       MSE = matrix(NA, K_fold, 1)
       RMSE = matrix(NA, K_fold, 1)
@@ -57,6 +58,9 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
                                                    n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
                                                    train_or_test = "not splitted"
                                                    ))
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
         metrics_ij <- metrics_ij[[1]]
         MSE[i, 1] <- metrics_ij[1]
         RMSE[i, 1] <- metrics_ij[2]
@@ -137,6 +141,8 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
           aic_d)
       res_matrix <- c(res_matrix, res_vec)
     }
+    print(coefficients)
+    coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
     res_matrix <-
       data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
     names(res_matrix) <- c(
@@ -179,5 +185,5 @@ calculateMetricsForAProbNoPCDCategory.validator_continuous <-
       'aic_m',
       'aic_d'
     )
-    return(list(list(res_matrix=res_matrix,mean_sd_dt=mean_sd_dt)))
+    return(list(list(res_matrix=res_matrix,mean_sd_dt=mean_sd_dt,coefficients=coefficients)))
   }

@@ -54,6 +54,7 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
     dt_rmna_list[[v_id]] <- dt_rmna
   }
   roc_res <- data.frame()
+  coefficients <- data.frame()
   print(length(validators))
   for (v_id in 1:length(validators)) {
     seed_num <- validators[[v_id]]$seed_num
@@ -135,7 +136,24 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
           error = function(e){
             message("no roc for continuous outcome")
           })
-
+          tryCatch({
+            coef_tmp <- m_res[[1]][['coefficients']]
+            coef_tmp$whichSplit <- dich_name
+            coef_tmp$validation_group <- validators_name[v_id]
+            coefficients <- rbind(coefficients, coef_tmp)
+          },
+          error = function(e){
+            message("no coefficients outputs")
+          })
+          tryCatch({
+            coef_tmp <- m_res[['coefficients']]
+            coef_tmp$whichSplit <- dich_name
+            coef_tmp$validation_group <- validators_name[v_id]
+            coefficients <- rbind(coefficients, coef_tmp)
+          },
+          error = function(e){
+            message("no coefficients outputs")
+          })
           tryCatch({
             mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
             mean_sd_dt$whichSplit <- names(mComb)[aChoiceProb]
@@ -203,6 +221,25 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
           error = function(e){
             message("no roc for continuous outcome")
           })
+          tryCatch({
+            coef_tmp <- m_res[[1]][['coefficients']]
+            coef_tmp$whichSplit <- dich_name
+            coef_tmp$validation_group <- validators_name[v_id]
+            coefficients <- rbind(coefficients, coef_tmp)
+          },
+          error = function(e){
+            message("no coefficients outputs")
+          })
+
+          tryCatch({
+            coef_tmp <- m_res[['coefficients']]
+            coef_tmp$whichSplit <- dich_name
+            coef_tmp$validation_group <- validators_name[v_id]
+            coefficients <- rbind(coefficients, coef_tmp)
+          },
+          error = function(e){
+            message("no coefficients outputs")
+          })
 
           tryCatch({
             mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
@@ -248,6 +285,7 @@ dichPseudoByPathAModelNoPCDCategory <- function(pp_dt,
     metrics = final_metrics_all_validators,
     rocs = roc_res,
     dt_y_test = dt_y_test,
-    mean_sd_dt = mean_sd_dt_all
+    mean_sd_dt = mean_sd_dt_all,
+    coefficients = coefficients
   )
 }

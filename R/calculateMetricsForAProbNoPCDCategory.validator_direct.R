@@ -28,6 +28,7 @@ calculateMetricsForAProbNoPCDCategory.validator_direct <-
     if(!sjmisc::is_empty(seed_num['seed_num_supervised_model'])){
       set.seed(seed_num['seed_num_supervised_model'])
     }
+    coefficients = data.frame()
     for (r in 1:repeated_folds_R) {
       accgmc12 = matrix(NA, K_fold, 1)
       aucmc12 = matrix(NA, K_fold, 1)
@@ -69,7 +70,9 @@ calculateMetricsForAProbNoPCDCategory.validator_direct <-
             lr_maxiter = lr_maxiter
           )
         }
-
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
         roc_res <- rbind(roc_res, metrics_ij[[2]])
         metrics_ij <- metrics_ij[[1]]
         accgmc12[i, 1] <- metrics_ij[1]
@@ -139,6 +142,8 @@ calculateMetricsForAProbNoPCDCategory.validator_direct <-
           kappa_d)
       res_matrix <- c(res_matrix, res_vec)
     }
+    print(coefficients)
+    coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
     res_matrix <-
       data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
     roc_res <-
@@ -156,5 +161,5 @@ calculateMetricsForAProbNoPCDCategory.validator_direct <-
       'kappa_d'
     )
     res_matrix <- colMeans(res_matrix, na.rm = TRUE)
-    return(list(res_matrix, roc_res))
+    return(list(res_matrix, roc_res,coefficients=coefficients))
   }

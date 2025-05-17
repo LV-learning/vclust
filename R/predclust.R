@@ -236,6 +236,9 @@ predclust <- function(sync_genclust,
                       reference = NULL,
                       comparison = NULL,
                       cohend_SD = NULL){ #
+  referencetmp <- reference
+  reference <- comparison
+  comparison <- referencetmp
   #test for repeated cv branch
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   if(customized) used_clusters <- unique(c(reference,comparison))

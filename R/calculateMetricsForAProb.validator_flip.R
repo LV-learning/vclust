@@ -45,7 +45,7 @@ calculateMetricsForAProb.validator_flip <- function(validator,
 
   kappa_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
   kappa_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
-
+  coefficients = data.frame()
   for(r in 1:repeated_folds_R){
     accgmc12=matrix(NA,K_fold,r_pseudo)
     aucmc12=matrix(NA,K_fold,r_pseudo)
@@ -86,6 +86,10 @@ calculateMetricsForAProb.validator_flip <- function(validator,
                                            lr_maxiter = lr_maxiter)
 
         }
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
+
         roc_res <- rbind(roc_res,metrics_ij[[2]])
         metrics_ij <- metrics_ij[[1]]
         accgmc12[i,j] <- metrics_ij[1]
@@ -188,6 +192,9 @@ calculateMetricsForAProb.validator_flip <- function(validator,
     res_vec <- c(acc_m,acc_d,auc_m,auc_d,sensg_m,sensg_d,spcg_m,spcg_d,kappa_m,kappa_d)
     res_matrix <- c(res_matrix,res_vec)
   }
+
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
   roc_res <- aggregate(roc_res[,c("TPR","FPR")],by=list(roc_res$threshold),mean)
 
@@ -223,5 +230,5 @@ calculateMetricsForAProb.validator_flip <- function(validator,
                          'kappa_m',
                          'kappa_d')
   #res_matrix <- colMeans(res_matrix,na.rm = TRUE)
-  return(list(res_matrix,roc_res))
+  return(list(res_matrix,roc_res,coefficients=coefficients))
 }

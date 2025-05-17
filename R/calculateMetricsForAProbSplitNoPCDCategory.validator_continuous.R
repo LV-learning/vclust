@@ -40,6 +40,8 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
     }
     mean_sd_dt_train <- data.frame()
     mean_sd_dt_test <- data.frame()
+    coefficients = data.frame()
+
     for (r in 1:repeated_folds_R) {
 
       MSE = matrix(NA, K_fold, 1)
@@ -69,6 +71,10 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
                                                    n = length(input_and_pp_and_var_df[input_and_pp_and_var_df$cluster == 1,validator$contVarName]),
                                                    train_or_test = "train"
                                                    ))
+
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
         metrics_ij <- metrics_ij[[1]]
         MSE[i, 1] <- metrics_ij[1]
         RMSE[i, 1] <- metrics_ij[2]
@@ -77,6 +83,7 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
         adj_r_square[i, 1] <- metrics_ij[5]
         aic[i, 1] <- metrics_ij[6]
       }
+
       # print("sensitivity is")
       # print(sensgmc12)
       # print("specificity is")
@@ -146,6 +153,8 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
           aic_d)
       res_matrix <- c(res_matrix, res_vec)
     }
+    print(coefficients)
+    coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
     res_matrix <-
       data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
     names(res_matrix) <- c(
@@ -266,7 +275,8 @@ calculateMetricsForAProbSplitNoPCDCategory.validator_continuous <-
     )
     res_vec <- c(res_matrix, res_vec_test)
     return(list(list(res_matrix=as.data.frame(t(res_vec)),
-                     mean_sd_dt=rbind(mean_sd_dt_train, mean_sd_dt_test)),
+                     mean_sd_dt=rbind(mean_sd_dt_train, mean_sd_dt_test),
+                     coefficients=coefficients),
                 NULL,
                 dt_y_test))
   }

@@ -210,6 +210,9 @@ validclust <- function(sync_genclust,
                        if_continuous = F,
                        cohend_SD = NULL
 ){
+  referencetmp <- reference
+  reference <- comparison
+  comparison <- referencetmp
   base::suppressWarnings(try(RNGkind(sample.kind = "Rounding"), silent = TRUE))
   assign("global_parameters_valid", list(), envir = .GlobalEnv)
   if(customized) used_clusters <- unique(c(reference,comparison))

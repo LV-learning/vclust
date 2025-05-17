@@ -15,6 +15,7 @@ genLogisticMetricsNoCV <- function(y,
   logistic_formula <- stats::as.formula(paste("y ~ ", predictor_part, sep = ""))
   ##logistics regression based on training dataset
   pCL <- stats::glm(logistic_formula,data=dt_y,family=binomial,control = list(maxit=lr_maxiter))
+  summ_mod <- summary(pCL)
   ##prediction on hold out validation set
   pCLpr <- stats::predict(pCL,dt_y_test,type="response")
   roc_res <- getROCAll(y_test,pCLpr)
@@ -72,5 +73,5 @@ genLogisticMetricsNoCV <- function(y,
   if(is.nan(kappamc12)){
     kappamc12 = NA
   }
-  return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res,dt_y_test[,c('original_id','y','predicted_y')]))
+  return(list(c(accgmc12,aucmc12,sensgmc12,spcgmc12,kappamc12),roc_res,dt_y_test[,c('original_id','y','predicted_y')], as.data.frame(summ_mod$coefficients)))
 }

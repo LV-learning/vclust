@@ -17,7 +17,7 @@ calculateMetricsForAProbNoPCDCategoryNoCV.validator_direct <- function(validator
     set.seed(seed_num['seed_num_supervised_model'])
   }
   roc_res <- data.frame()
-
+  coefficients = data.frame()
   if(supervised_model == "glmnet"){
     metrics_ij <- genGlmnetMetricsOpt(y = categoryVec,
                                       predictor_part = predictor_part,
@@ -31,6 +31,11 @@ calculateMetricsForAProbNoPCDCategoryNoCV.validator_direct <- function(validator
                                         input_and_pp_and_var_df = input_and_pp_and_var_df,
                                         lr_maxiter = lr_maxiter)
   }
+  coeff_df <- metrics_ij[[3]]
+  coeff_df$covariates <- row.names(coeff_df)
+  coefficients <- rbind(coefficients,coeff_df)
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   roc_res <- rbind(roc_res, metrics_ij[[2]])
   metrics_ij <- metrics_ij[[1]]
   acc_m <- metrics_ij[1]
@@ -51,5 +56,5 @@ calculateMetricsForAProbNoPCDCategoryNoCV.validator_direct <- function(validator
                       'kappa_d')
   roc_res <-
     aggregate(roc_res[, c("TPR", "FPR")], by = list(roc_res$threshold), mean)
-  return(list(res_vec, roc_res))
+  return(list(res_vec, roc_res,coefficients=coefficients))
 }

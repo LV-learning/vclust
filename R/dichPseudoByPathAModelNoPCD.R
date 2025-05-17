@@ -86,6 +86,7 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
   ##dichpesudoPrepare
   ##impute missing data
   roc_res <- data.frame()
+  coefficients <- data.frame()
   for (v_id in 1:length(validators)) {
     seed_num <- validators[[v_id]]$seed_num
     dt_rnames <- dt_rnames_list[[v_id]]
@@ -144,6 +145,25 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
         },
         error = function(e){
           message("no roc for continuous outcome")
+        })
+        tryCatch({
+          coef_tmp <- m_res[[1]][['coefficients']]
+          coef_tmp$whichSplit <- dich_name
+          coef_tmp$validation_group <- validators_name[v_id]
+          coefficients <- rbind(coefficients, coef_tmp)
+        },
+        error = function(e){
+          message("no coefficients outputs NoPCD")
+        })
+
+        tryCatch({
+          coef_tmp <- m_res[['coefficients']]
+          coef_tmp$whichSplit <- dich_name
+          coef_tmp$validation_group <- validators_name[v_id]
+          coefficients <- rbind(coefficients, coef_tmp)
+        },
+        error = function(e){
+          message("no coefficients outputs NoPCD")
         })
 
 
@@ -214,6 +234,25 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
           message("no roc for continuous outcome")
         })
         tryCatch({
+          coef_tmp <- m_res[[1]][['coefficients']]
+          coef_tmp$whichSplit <- dich_name
+          coef_tmp$validation_group <- validators_name[v_id]
+          coefficients <- rbind(coefficients, coef_tmp)
+        },
+        error = function(e){
+          message("no coefficients outputs NoPCD")
+        })
+        tryCatch({
+          coef_tmp <- m_res[['coefficients']]
+          coef_tmp$whichSplit <- dich_name
+          coef_tmp$validation_group <- validators_name[v_id]
+          coefficients <- rbind(coefficients, coef_tmp)
+        },
+        error = function(e){
+          message("no coefficients outputs NoPCD")
+        })
+
+        tryCatch({
           mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
           mean_sd_dt$whichSplit <- dich_name
           mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
@@ -254,6 +293,7 @@ dichPseudoByPathAModelNoPCD <- function(pp_dt,
     metrics = final_metrics_all_validators,
     rocs = roc_res,
     dt_y_test = dt_y_test,
-    mean_sd_dt = mean_sd_dt_all
+    mean_sd_dt = mean_sd_dt_all,
+    coefficients = coefficients
   )
 }

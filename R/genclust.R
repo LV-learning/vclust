@@ -150,6 +150,9 @@ genclust <- function(model_type,
                     GMM_ID = NULL,
                     GMM_AUXILIARY = NULL
                     ){
+  if (dir.exists(output_path_prefix) == FALSE) {
+    dir.create(output_path_prefix)
+  }
   if (tolower(model_type) %in% c("gmm", "growth mixture model") & is.null(GMM_ID)){
     input_dt_id <- read.csv(data_path, header = is.null(variable_names))
     input_dt_id$rowname <- rownames(input_dt_id)

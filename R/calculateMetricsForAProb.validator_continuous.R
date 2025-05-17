@@ -47,7 +47,7 @@ calculateMetricsForAProb.validator_continuous <- function(validator,
 
   aic_m_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
   aic_v_perRepPCD=matrix(NA,nrow=r_pseudo,ncol=repeated_folds_R)
-
+  coefficients = data.frame()
   for(r in 1:repeated_folds_R){
 
     MSE = matrix(NA, K_fold, r_pseudo)
@@ -56,7 +56,6 @@ calculateMetricsForAProb.validator_continuous <- function(validator,
     r_square = matrix(NA, K_fold, r_pseudo)
     adj_r_square = matrix(NA, K_fold, r_pseudo)
     aic = matrix(NA, K_fold, r_pseudo)
-
 
     for(i in 1:K_fold){
       for(j in 1:r_pseudo){
@@ -72,6 +71,10 @@ calculateMetricsForAProb.validator_continuous <- function(validator,
             input_and_pp_and_var_df = input_and_pp_and_var_df
           )
         }
+
+        coeff_df <- metrics_ij[[3]]
+        coeff_df$covariates <- row.names(coeff_df)
+        coefficients <- rbind(coefficients,coeff_df)
 
         metrics_ij <- metrics_ij[[1]]
         MSE[i, j] <- metrics_ij[1]
@@ -195,6 +198,8 @@ calculateMetricsForAProb.validator_continuous <- function(validator,
         aic_d)
     res_matrix <- c(res_matrix,res_vec)
   }
+  print(coefficients)
+  coefficients <- coefficients %>% group_by(covariates) %>% summarise(mean=mean(Estimate), SD=sd(Estimate), SE = mean(`Std. Error`))
   res_matrix <- data.frame(matrix(res_matrix, nrow = repeated_folds_R, byrow = TRUE))
 
   MSE_m_overall=mean(MSE_m_perRepPCD, na.rm = TRUE)
@@ -238,5 +243,5 @@ calculateMetricsForAProb.validator_continuous <- function(validator,
   )
   print(res_matrix)
   #res_matrix <- colMeans(res_matrix,na.rm = TRUE)
-  return(list(res_matrix))
+  return(list(res_matrix,coefficients=coefficients))
 }

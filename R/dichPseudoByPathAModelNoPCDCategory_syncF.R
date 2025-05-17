@@ -54,6 +54,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
     dt_rmna_list[[v_id]] <- dt_rmna
   }
   roc_res <- data.frame()
+  coefficients <- data.frame()
   print(length(validators))
   for (v_id in 1:length(validators)) {
 
@@ -150,6 +151,24 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
               message("no roc for continuous outcome")
             })
             tryCatch({
+              coef_tmp <- m_res[[1]][['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+
+            })
+            tryCatch({
+              coef_tmp <- m_res[['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+              message("no coefficients outputs NoPCD syncF")
+            })
+            tryCatch({
               mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
               mean_sd_dt$whichSplit <- names(mComb)[aChoiceProb]
               mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
@@ -225,6 +244,24 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
               message("no roc for continuous outcome")
             })
             tryCatch({
+              coef_tmp <- m_res[[1]][['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+
+            })
+            tryCatch({
+              coef_tmp <- m_res[['coefficients']]
+              coef_tmp$whichSplit <- names(mComb)[aChoiceProb]
+              coef_tmp$validation_group <- validators_name[v_id]
+              coefficients <- rbind(coefficients, coef_tmp)
+            },
+            error = function(e){
+              message("no coefficients outputs NoPCD syncF")
+            })
+            tryCatch({
               mean_sd_dt <- m_res[[1]][["mean_sd_dt"]]
               mean_sd_dt$whichSplit <- names(mComb)[aChoiceProb]
               mean_sd_dt_tmp <- rbind(mean_sd_dt_tmp, mean_sd_dt)
@@ -270,6 +307,7 @@ dichPseudoByPathAModelNoPCDCategory_syncF <- function(pp_dt,
     metrics = final_metrics_all_validators,
     rocs = roc_res,
     dt_y_test = dt_y_test,
-    mean_sd_dt = mean_sd_dt_all
+    mean_sd_dt = mean_sd_dt_all,
+    coefficients = coefficients
   )
 }
